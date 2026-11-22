@@ -383,7 +383,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
 
   function planShell() {
     var banner = S.example ? '<div class="note info">These are example holdings taken from the video (US dollar prices, illustrative share counts). Replace them in Holdings, or <button class="btn" data-act="startfresh">start with an empty portfolio</button>.</div>' : "";
-    return '<div class="stack">' + banner +
+    return '<div class="stack">' + banner + '<div id="dash"></div>' +
       '<section class="panel"><div class="step"><div class="n">1</div><div class="stack" style="gap:12px">' +
       '<div><h2>Contribute on your date</h2><p class="muted small">Same date every month. Never a lump sum.</p></div>' +
       '<div class="grid">' +
@@ -393,6 +393,40 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       '<label class="f">Investing day of the month<input type="number" min="1" max="31" step="1" id="investDay" value="' + S.investDay + '"></label>' +
       '</div><div id="investNext" class="small"></div><div id="allocNote"></div></div></div></section>' +
       '<div id="planOut" class="stack"></div></div>';
+  }
+
+  function signed(n) { return (n >= 0 ? "+" : "-") + money(Math.abs(n)); }
+  function dashboardHtml(P) {
+    var T = P.T, cost = 0, ret = 0, missing = 0;
+    S.holdings.forEach(function (h) {
+      if (!(h.shares > 0)) return;
+      if (h.cost > 0 && h.price > 0) { cost += h.shares * h.cost; ret += h.shares * (h.price - h.cost); }
+      else missing++;
+    });
+    var retPct = cost > 0 ? ret / cost * 100 : null;
+    var cls = ret >= 0 ? "var(--go)" : "var(--warn)";
+    var buys = { core: 0, quality: 0, spec: 0 };
+    P.rows.forEach(function (r) { buys[r.layer] += r.amt; });
+    var after = { core: T.byLayer.core + buys.core, quality: T.byLayer.quality + buys.quality, spec: T.byLayer.spec + buys.spec };
+    var afterAll = T.all + P.total;
+    function share(v, tot) { return tot > 0 ? v / tot * 100 : 0; }
+    function stack(vals, tot, label) {
+      return '<div class="small muted" style="margin:10px 0 4px">' + label + '</div><div class="bar" style="height:14px;display:flex" role="img" aria-label="' + esc(label) + '">' +
+        LAYERS.map(function (L) { return '<i style="position:static;width:' + share(vals[L.id], tot) + '%;background:' + L.color + ';border-radius:0"></i>'; }).join("") + "</div>";
+    }
+    var rows = LAYERS.map(function (L) {
+      return '<tr><td><span class="sw" style="background:' + L.color + '"></span><b>' + L.name + '</b></td><td class="r">' + money(T.byLayer[L.id]) + '</td><td class="r muted">' + pct(share(T.byLayer[L.id], T.all)) + '</td><td class="r">' + (buys[L.id] > 0.004 ? "+" + money(buys[L.id]) : '<span class="muted">–</span>') + '</td><td class="r"><b>' + money(after[L.id]) + '</b></td><td class="r muted">' + pct(share(after[L.id], afterAll)) + "</td></tr>";
+    }).join("");
+    return '<section class="panel"><h2 style="margin-bottom:12px">Portfolio dashboard</h2><div class="grid">' +
+      '<div class="tile"><div class="k">Total holding value</div><div class="v">' + money(T.all) + '</div></div>' +
+      '<div class="tile"><div class="k">Return on cost</div><div class="v" style="color:' + cls + '">' + (cost > 0 ? signed(ret) : "–") + '</div></div>' +
+      '<div class="tile"><div class="k">Return %</div><div class="v" style="color:' + cls + '">' + (retPct == null ? "–" : (retPct >= 0 ? "+" : "") + pct(retPct)) + '</div></div>' +
+      '<div class="tile"><div class="k">After next investment</div><div class="v">' + money(afterAll) + '</div><div class="small muted">' + (P.total > 0 ? "+" + money(P.total) + " bought" : "no buys") + "</div></div></div>" +
+      '<p class="small muted" style="margin-top:8px">Return = shares × (current price − average cost), against ' + money(cost) + ' paid.' + (missing ? " " + missing + (missing > 1 ? " holdings are" : " holding is") + " left out of the return because average cost or price is missing." : "") + "</p>" +
+      '<div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Sleeve</th><th class="r">Value now</th><th class="r">Share</th><th class="r">Next buy</th><th class="r">Value after buy</th><th class="r">Share</th></tr></thead><tbody>' + rows +
+      '<tr><td><b>Total</b></td><td class="r"><b>' + money(T.all) + '</b></td><td class="r muted">100%</td><td class="r">' + (P.total > 0 ? "+" + money(P.total) : "–") + '</td><td class="r"><b>' + money(afterAll) + '</b></td><td class="r muted">100%</td></tr></tbody></table></div>' +
+      stack(T.byLayer, T.all, "Holdings by sleeve now") + stack(after, afterAll, "Holdings by sleeve after next investment") +
+      '<p class="small muted" style="margin-top:8px">"After" adds the buys from step 2 at today\'s prices. It does not include trims or price moves.</p></section>';
   }
 
   function pill(speed) {
@@ -414,6 +448,8 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     var out = document.getElementById("planOut");
     if (!out) return;
     var P = computePlan();
+    var dashEl = document.getElementById("dash");
+    if (dashEl) dashEl.innerHTML = dashboardHtml(P);
 
     function money0(n) { return (Math.abs(n % 1) < 0.005) ? S.cur + Math.round(n).toLocaleString("en-GB") : money(n); }
     function joinNames(a) { return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]; }
