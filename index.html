@@ -303,7 +303,52 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     save();
   }
 
-  var refreshedAt = null, pasteMsgText = "";
+  var refreshedAt = null, pasteMsgText = "", refreshing = false, refreshMsg = "";
+  var KEYK = "three-speeds-finnhub-key";
+  function getKey() { try { return localStorage.getItem(KEYK) || ""; } catch (e) { return ""; } }
+  function setKey(v) { try { if (v) localStorage.setItem(KEYK, v); else localStorage.removeItem(KEYK); } catch (e) {} }
+  function fetchJson(url) {
+    return fetch(url).then(function (r) {
+      if (r.status === 429) throw new Error("rate limit reached, wait a minute");
+      if (r.status === 401) throw new Error("key rejected");
+      if (r.status === 403) throw new Error("not available on the free plan");
+      if (!r.ok) throw new Error("service error " + r.status);
+      return r.json();
+    });
+  }
+  function doRefresh() {
+    var key = getKey();
+    if (!key) { refreshedAt = new Date(); refreshMsg = "No Finnhub key saved, so prices were not fetched. Add it in Settings."; renderPlanOut(); return; }
+    var list = S.holdings.filter(function (h) { return (h.ticker || "").trim(); });
+    if (!list.length) { refreshedAt = new Date(); refreshMsg = "Add a ticker to each holding in the Holdings tab first."; renderPlanOut(); return; }
+    refreshing = true; refreshMsg = "Fetching prices..."; renderPlanOut();
+    var ok = 0, problems = [], i = 0;
+    function one(h) {
+      var sym = encodeURIComponent(h.ticker.trim().toUpperCase()), base = "https://finnhub.io/api/v1/";
+      return fetchJson(base + "quote?symbol=" + sym + "&token=" + encodeURIComponent(key)).then(function (q) {
+        if (!q || !(q.c > 0)) throw new Error("no price returned for this ticker");
+        if (!h.priceManual) h.price = q.c;
+        return fetchJson(base + "stock/metric?symbol=" + sym + "&metric=all&token=" + encodeURIComponent(key)).then(function (m) {
+          var hi = m && m.metric ? m.metric["52WeekHigh"] : null;
+          if (hi > 0 && !h.highManual) h.high = hi;
+          else if (!(hi > 0) && !h.highManual) problems.push(h.ticker + ": no 52-week high returned");
+          ok++;
+        });
+      }).catch(function (e) { problems.push(h.ticker + ": " + e.message); });
+    }
+    function next() {
+      if (i >= list.length) return Promise.resolve();
+      var h = list[i++];
+      return one(h).then(function () { return new Promise(function (r) { setTimeout(r, 250); }); }).then(next);
+    }
+    next().then(function () {
+      refreshing = false; refreshedAt = new Date();
+      if (ok) S.pricesAsOf = new Date().toISOString();
+      S.example = false; save();
+      refreshMsg = "Updated " + ok + " of " + list.length + (problems.length ? ". Problems: " + problems.join("; ") : ".");
+      renderPlanOut();
+    }, function () { refreshing = false; refreshMsg = "Refresh failed."; renderPlanOut(); });
+  }
   function nextInvest() {
     var now = new Date(), y = now.getFullYear(), m = now.getMonth(), td = new Date(y, m, now.getDate());
     function pick(yy, mm) { return new Date(yy, mm, Math.min(S.investDay, new Date(yy, mm + 1, 0).getDate())); }
@@ -379,7 +424,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       if (r.both) flags.push("also up " + pct(r.up, 0) + " in 30 days");
       if (r.capped) flags.push("buy limited by sleeve cap");
       if (!(r.h.price > 0)) flags.push("enter a price");
-      return "<tr><td><b>" + esc(r.h.name || r.h.ticker) + '</b></td><td class="r"><input class="priceinp" type="number" min="0" step="any" aria-label="Price for ' + esc(r.h.name || r.h.ticker) + '" data-id="' + r.h.id + '" data-f="price" value="' + (r.h.price == null ? "" : r.h.price) + '">' + (r.h.priceManual ? '<div class="small muted">manual</div>' : "") + '</td><td class="r">' + (r.h.high > 0 ? money(r.h.high) : "–") + '</td><td class="r"><b>' + (r.off == null ? "–" : pct(Math.max(0, r.off), 0)) + '</b></td><td class="muted">' + (r.layer === "spec" ? "Sleeve" : r.trig + "%") + '</td><td><span class="verdict ' + r.speed + '">' + label + "&nbsp; " + money0(S.monthly * r.mult) + "</span>" + (flags.length ? '<div class="small muted">' + esc(flags.join(" · ")) + "</div>" : "") + '</td><td class="r"><b>' + money(r.amt) + "</b></td></tr>";
+      return "<tr><td><b>" + esc(r.h.name || r.h.ticker) + '</b></td><td class="r"><input class="priceinp" type="number" min="0" step="any" aria-label="Price for ' + esc(r.h.name || r.h.ticker) + '" data-id="' + r.h.id + '" data-f="price" value="' + (r.h.price == null ? "" : r.h.price) + '">' + (r.h.priceManual ? '<div class="small muted">manual · <a href="#" data-unmanual="' + r.h.id + '">use fetched</a></div>' : "") + '</td><td class="r">' + (r.h.high > 0 ? money(r.h.high) : "–") + '</td><td class="r"><b>' + (r.off == null ? "–" : pct(Math.max(0, r.off), 0)) + '</b></td><td class="muted">' + (r.layer === "spec" ? "Sleeve" : r.trig + "%") + '</td><td><span class="verdict ' + r.speed + '">' + label + "&nbsp; " + money0(S.monthly * r.mult) + "</span>" + (flags.length ? '<div class="small muted">' + esc(flags.join(" · ")) + "</div>" : "") + '</td><td class="r"><b>' + money(r.amt) + "</b></td></tr>";
     }).join("");
     var halfNames = P.rows.filter(function (r) { return r.up != null && r.up >= S.halfPct; }).map(nm);
     var noP30 = P.rows.filter(function (r) { return r.up == null; }).length;
@@ -402,11 +447,11 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     out.innerHTML =
       '<section class="panel"><div class="step"><div class="n">2</div><div class="stack" style="gap:12px;min-width:0">' +
       '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2>Price vs. the 52-week high</h2><p class="muted small">Each holding is checked against its 52-week high. Verdict amounts are for your ' + money0(S.monthly) + ' month: normal 50%, double down 150%, half speed 25%.</p></div>' +
-      '<div style="text-align:right"><button class="btn primary" data-act="refresh">Refresh</button><div class="small muted" style="margin-top:4px">' + (refreshed ? "Refreshed " + refreshed : "Not refreshed yet") + "</div></div></div>" +
+      '<div style="text-align:right;max-width:340px"><button class="btn primary" data-act="refresh"' + (refreshing ? " disabled" : "") + '>' + (refreshing ? "Refreshing..." : "Refresh") + '</button><div class="small muted" style="margin-top:4px">' + (refreshed ? "Refreshed " + refreshed : "Not refreshed yet") + (refreshMsg ? "<br>" + esc(refreshMsg) : "") + "</div></div></div>" +
       (isToday ? '<div class="note" style="background:var(--go-bg);color:var(--go)"><b>Today is your investing day.</b> Refresh, then act on the verdicts below.</div>' : "") +
       '<div class="tablewrap slide"><table class="slidetbl"><thead><tr><th>Holding</th><th class="r">Price</th><th class="r">52-wk high</th><th class="r">Off high</th><th>Rule</th><th>Verdict</th><th class="r">Your buy</th></tr></thead><tbody>' + (slideRows || '<tr><td colspan="7" class="muted">Add holdings in the Holdings tab.</td></tr>') + "</tbody></table></div>" +
       '<div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px"><div class="halfbox">' + halfText + "</div>" + (nearText ? '<p class="small muted" style="font-style:italic;max-width:320px">' + esc(nearText) + "</p>" : "") + "</div>" +
-      '<p class="small muted">Prices last updated: ' + esc(fmtStamp(S.pricesAsOf)) + ". Live quotes are not pulled automatically: type over any price in the table to override it (it is kept when you Refresh), or update prices in Holdings. Double-down rule: " + S.trig.quality + "% below the 52-week high for stocks, " + S.trig.core + "% for the index core.</p>" +
+      '<p class="small muted">Prices last updated: ' + esc(fmtStamp(S.pricesAsOf)) + ". Refresh pulls the price and 52-week high from Finnhub for each ticker. Type over any price to override it (it is kept when you Refresh). The 30-day price is not fetched, so enter it in Holdings. Double-down rule: " + S.trig.quality + "% below the 52-week high for stocks, " + S.trig.core + "% for the index core.</p>" +
       '<details ' + (pasteMsgText ? "open" : "") + '><summary class="small" style="cursor:pointer">Update prices by pasting</summary><div class="stack" style="gap:8px;margin-top:8px"><p class="small muted">One holding per line: ticker, price, 52-week high, price 30 days ago. The last two are optional. Example: <code>NVDA 162.85 239.24 150</code></p><textarea id="paste" spellcheck="false" placeholder="NVDA 162.85 239.24 150"></textarea><div class="row"><button class="btn" data-act="applypaste">Apply prices</button><span class="small muted" id="pasteMsg">' + esc(pasteMsgText) + '</span></div></div></details>' +
       "</div></div></section>" +
 
@@ -478,6 +523,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       '<label class="f">Half speed: up at least (%) in 30 days<input type="number" min="0" step="any" id="halfPct" value="' + S.halfPct + '"></label>' +
       LAYERS.map(function (L) { return '<label class="f">Double down: ' + L.name + ' below 52-wk high (%)<input type="number" min="0" step="any" data-trig="' + L.id + '" value="' + S.trig[L.id] + '"></label>'; }).join("") +
       '</div><p class="muted small" style="margin-top:10px">The video uses 20% for individual stocks and 10% for the S&amp;P 500, because an index does not fall like a single stock. Trim rungs are fixed at +50%, +100%, +150% with 10%, 20%, 30%, repeating.</p></section>' +
+      '<section class="panel"><h2 style="margin-bottom:6px">Live prices (Finnhub)</h2><p class="muted small" style="margin-bottom:10px">Paste your Finnhub API key. It is stored only in this browser, separately from your portfolio, and is not included in the backup text. Each holding needs a ticker in the Holdings tab.</p><label class="f">API key<input type="password" id="finnhubKey" autocomplete="off" value="' + esc(getKey()) + '"></label><p class="small muted" id="keyMsg" style="margin-top:6px"></p></section>' +
       '<section class="panel"><h2 style="margin-bottom:6px">Backup</h2><p class="muted small" style="margin-bottom:10px">Your data lives only in this browser. Copy the text below somewhere safe, and paste it back here to restore it on another device.</p>' +
       '<textarea id="backup" spellcheck="false">' + esc(JSON.stringify(S)) + '</textarea><div class="row" style="margin-top:10px"><button class="btn" data-act="copy">Copy</button><button class="btn" data-act="import">Restore from text</button><span class="small muted" id="backupMsg"></span></div></section>' +
       '<section class="panel"><h2 style="margin-bottom:6px">Reset</h2><div class="row"><button class="btn" data-act="loadex">Load the video examples</button><button class="btn danger" data-act="startfresh">Empty everything</button></div></section></div>';
@@ -496,7 +542,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       if (!confirmRecord) { confirmRecord = true; renderPlanOut(); return; }
       recordMonth(); S.example = false; confirmRecord = false; render(); return;
     }
-    if (a === "refresh") { refreshedAt = new Date(); renderPlanOut(); return; }
+    if (a === "refresh") { doRefresh(); return; }
     if (a === "applypaste") {
       var box = document.getElementById("paste"), pm = document.getElementById("pasteMsg"), upd = 0, unknown = [];
       box.value.split("\n").forEach(function (line) {
@@ -535,8 +581,17 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     }
   });
 
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest("a[data-unmanual]");
+    if (!a) return;
+    e.preventDefault();
+    var h = S.holdings.filter(function (x) { return x.id === a.dataset.unmanual; })[0];
+    if (h) { h.priceManual = false; save(); renderPlanOut(); }
+  });
+
   document.addEventListener("change", function (e) {
     var t = e.target;
+    if (t.id === "finnhubKey") { setKey(t.value.trim()); var km = document.getElementById("keyMsg"); if (km) km.textContent = t.value.trim() ? "Key saved in this browser." : "Key removed."; return; }
     if (t.dataset.f) {
       var h = S.holdings.filter(function (x) { return x.id === t.dataset.id; })[0];
       if (!h) return;
@@ -545,6 +600,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       if (f === "shares" && h.shares == null) h.shares = 0;
       if (f === "price" || f === "high" || f === "p30") S.pricesAsOf = new Date().toISOString();
       if (f === "price") h.priceManual = true;
+      if (f === "high") h.highManual = true;
       S.example = false; save();
       if (tab === "plan") renderPlanOut();
       return;
