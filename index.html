@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Three Speeds DCA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: a single working column with a tab bar; Plan tab reads top to bottom as the five-step monthly playbook. */
+:root {
+  --bg: #f3f5f4;
+  --surface: #ffffff;
+  --ink: #141a17;
+  --muted: #5d6963;
+  --line: #dde3e0;
+  --accent: #141a17;
+  --accent-ink: #ffffff;
+  --go: #2f7a1f;
+  --go-bg: #e4f1df;
+  --slow: #a86500;
+  --slow-bg: #faedd3;
+  --warn: #b3261e;
+  --warn-bg: #fbe4e1;
+  --norm-bg: #e8ece9;
+  --core: #141a17;
+  --quality: #6b7a72;
+  --spec: #c9402c;
+  --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1412; --surface: #171d1a; --ink: #e9eeeb; --muted: #94a19a; --line: #2a332f;
+    --accent: #e9eeeb; --accent-ink: #0f1412;
+    --go: #7cc96a; --go-bg: #1c2e18; --slow: #e3a640; --slow-bg: #33280f;
+    --warn: #f08a80; --warn-bg: #3a1d1a; --norm-bg: #232b27;
+    --core: #e9eeeb; --quality: #8a9a91; --spec: #ee7662;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1412; --surface: #171d1a; --ink: #e9eeeb; --muted: #94a19a; --line: #2a332f;
+  --accent: #e9eeeb; --accent-ink: #0f1412;
+  --go: #7cc96a; --go-bg: #1c2e18; --slow: #e3a640; --slow-bg: #33280f;
+  --warn: #f08a80; --warn-bg: #3a1d1a; --norm-bg: #232b27;
+  --core: #e9eeeb; --quality: #8a9a91; --spec: #ee7662;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.5;
+  padding-block: 20px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1040px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: 26px; letter-spacing: -0.01em; }
+h2 { font-size: 18px; }
+h3 { font-size: 15px; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 12.5px; }
+.num { font-variant-numeric: tabular-nums; }
+header.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+nav.tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+nav.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; font: 500 14px var(--font-body); color: var(--muted); cursor: pointer; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; }
+input, select, textarea {
+  font: 14px var(--font-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 7px 9px; width: 100%; min-width: 0;
+}
+input[type=number] { font-variant-numeric: tabular-nums; }
+.btn { font: 500 13px var(--font-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 7px 12px; border-radius: 6px; cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { color: var(--warn); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.tile { background: var(--bg); border-radius: 6px; padding: 12px; }
+.tile .k { font-size: 12px; color: var(--muted); }
+.tile .v { font: 700 22px var(--font-display); font-variant-numeric: tabular-nums; }
+.step { display: grid; grid-template-columns: 28px 1fr; gap: 12px; }
+.step .n { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font: 700 13px var(--font-display); display: grid; place-items: center; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-size: 12px; font-weight: 500; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+td.r, th.r { text-align: right; }
+tr:last-child td { border-bottom: 0; }
+.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill.double { background: var(--go-bg); color: var(--go); }
+.pill.half { background: var(--slow-bg); color: var(--slow); }
+.pill.normal { background: var(--norm-bg); color: var(--ink); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.note { border-radius: 6px; padding: 9px 12px; font-size: 13px; }
+.note.warn { background: var(--warn-bg); color: var(--warn); }
+.note.info { background: var(--norm-bg); }
+.bar { height: 10px; background: var(--norm-bg); border-radius: 5px; position: relative; overflow: hidden; }
+.bar i { position: absolute; inset: 0 auto 0 0; border-radius: 5px; }
+.tick { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--ink); }
+.holdtbl input { padding: 5px 6px; font-size: 13px; }
+.holdtbl td { padding: 5px 4px; }
+.layerhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+textarea { min-height: 120px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+table.slidetbl thead th { background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 13px; padding: 10px 10px; border-bottom: 0; }
+table.slidetbl td { padding: 11px 10px; }
+table.slidetbl tbody tr:nth-child(even) td { background: var(--bg); }
+.verdict { font-weight: 700; white-space: nowrap; }
+.verdict.double { color: var(--go); }
+.verdict.half { color: var(--slow); }
+.verdict.normal { color: var(--ink); }
+.halfbox { border: 2px solid var(--slow); color: var(--ink); border-radius: 8px; padding: 9px 14px; }
+.halfbox b { color: var(--slow); }
+input.priceinp { width: 100px; text-align: right; padding: 5px 7px; font-size: 14px; }
+code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+@media (max-width: 560px) { h1 { font-size: 22px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Three Speeds DCA</h1>
+      <p class="muted">Core, Quality and Speculative layers. Buy at the speed the market sets.</p>
+    </div>
+    <p class="small muted" id="saveState"></p>
+  </header>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main id="view"></main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "three-speeds-dca-v1";
+  var LAYERS = [
+    { id: "core", name: "Core", sub: "Index fund or ETF, the offensive line", color: "var(--core)" },
+    { id: "quality", name: "Quality growth", sub: "Real revenue, real scale", color: "var(--quality)" },
+    { id: "spec", name: "Speculative", sub: "High potential, high volatility", color: "var(--spec)" }
+  ];
+  var TRIM = [10, 20, 30];
+
+  function uid() { return Math.random().toString(36).slice(2, 9); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function num(v) { if (v === "" || v == null) return null; var n = parseFloat(v); return isFinite(n) ? n : null; }
+  function today() { return new Date().toISOString().slice(0, 10); }
+
+  function example() {
+    function H(layer, name, ticker, shares, cost, price, high, rung) {
+      return { id: uid(), layer: layer, name: name, ticker: ticker, w: 1, shares: shares, cost: cost, price: price, high: high, p30: null, rung: rung || 0 };
+    }
+    return {
+      example: true,
+      cur: "$", monthly: 1000, dry: 2000, investDay: 1, pricesAsOf: "2026-11-13",
+      alloc: { core: 45, quality: 50, spec: 5 },
+      specCap: 5, halfPct: 20,
+      trig: { core: 10, quality: 20, spec: 20 },
+      holdings: [
+        H("core", "S&P 500 index", "SPX", 2, 6800, 7562, 7819),
+        H("quality", "NVIDIA", "NVDA", 40, 120, 162.85, 239.24),
+        H("quality", "Google", "GOOGL", 20, 210, 295.77, 408.61),
+        H("quality", "Tesla", "TSLA", 12, 150, 390.22, 498.83, 2),
+        H("quality", "Palantir", "PLTR", 25, 140, 169.2, 212.94),
+        H("spec", "SpaceX", "SPCX", 10, 150, 143.09, 225.64),
+        H("spec", "Bloom Energy", "BE", 15, 200, 185.42, 351.28)
+      ],
+      history: []
+    };
+  }
+  function blank() {
+    return { example: false, cur: "£", monthly: 500, dry: 0, investDay: 1, pricesAsOf: null, alloc: { core: 50, quality: 45, spec: 5 }, specCap: 5, halfPct: 20, trig: { core: 10, quality: 20, spec: 20 }, holdings: [], history: [] };
+  }
+
+  var S, storageOK = true;
+  function load() {
+    try { var raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) { storageOK = false; }
+    return null;
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); document.getElementById("saveState").textContent = "Saved in this browser"; }
+    catch (e) { storageOK = false; document.getElementById("saveState").textContent = "Not saved: browser storage unavailable. Use Settings > Backup."; }
+  }
+  S = load() || example();
+  S.investDay = Math.min(31, Math.max(1, parseInt(S.investDay, 10) || 1));
+
+  function money(n) {
+    if (n == null || !isFinite(n)) return "–";
+    var neg = n < 0;
+    return (neg ? "-" : "") + S.cur + Math.abs(n).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function pct(n, d) { if (n == null || !isFinite(n)) return "–"; return n.toLocaleString("en-GB", { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d }) + "%"; }
+
+  /* ---------- Calculations ---------- */
+  function totals() {
+    var byLayer = { core: 0, quality: 0, spec: 0 }, all = 0;
+    S.holdings.forEach(function (h) {
+      var v = (h.shares || 0) * (h.price || 0);
+      byLayer[h.layer] += v; all += v;
+    });
+    return { byLayer: byLayer, all: all };
+  }
+
+  function computePlan() {
+    var T = totals();
+    var rows = [], unallocated = 0, notes = [];
+    LAYERS.forEach(function (L) {
+      var hs = S.holdings.filter(function (h) { return h.layer === L.id; });
+      var budget = S.monthly * (S.alloc[L.id] || 0) / 100;
+      var sumW = hs.reduce(function (a, h) { return a + (h.w > 0 ? h.w : 1); }, 0);
+      if (!hs.length) { unallocated += budget; if (budget > 0) notes.push("No holdings in " + L.name + ", so its " + money(budget) + " goes to dry powder."); return; }
+      hs.forEach(function (h) {
+        var base = budget * (h.w > 0 ? h.w : 1) / sumW;
+        var off = (h.high > 0 && h.price > 0) ? (1 - h.price / h.high) * 100 : null;
+        var up = (h.p30 > 0 && h.price > 0) ? (h.price / h.p30 - 1) * 100 : null;
+        var trig = S.trig[L.id];
+        var isDown = off != null && off >= trig;
+        var isUp = up != null && up >= S.halfPct;
+        var speed = isDown ? "double" : isUp ? "half" : "normal";
+        var mult = speed === "double" ? 1.5 : speed === "half" ? 0.25 : 0.5;
+        rows.push({ h: h, layer: L.id, base: base, off: off, up: up, trig: trig, speed: speed, mult: mult, amt: base * mult, both: isDown && isUp, capped: false });
+      });
+    });
+
+    // Speculative sleeve cap
+    var cap = S.specCap / 100;
+    if (cap > 0 && cap < 1) {
+      var other = rows.filter(function (r) { return r.layer !== "spec"; }).reduce(function (a, r) { return a + r.amt; }, 0);
+      var specRows = rows.filter(function (r) { return r.layer === "spec"; });
+      var specAmt = specRows.reduce(function (a, r) { return a + r.amt; }, 0);
+      var maxSpec = Math.max(0, (cap * (T.all + other) - T.byLayer.spec) / (1 - cap));
+      if (specAmt > maxSpec + 0.005) {
+        var f = specAmt > 0 ? maxSpec / specAmt : 0;
+        specRows.forEach(function (r) { r.amt *= f; r.capped = true; });
+        notes.push("Speculative buys limited to " + money(maxSpec) + " to keep the sleeve at or under " + S.specCap + "% of your portfolio.");
+      }
+    }
+
+    // Dry powder limit
+    var total = rows.reduce(function (a, r) { return a + r.amt; }, 0);
+    var avail = S.monthly + Math.max(0, S.dry);
+    var scaled = false;
+    if (total > avail + 0.005) {
+      var g = avail / total;
+      rows.forEach(function (r) { r.amt *= g; r.scaled = true; });
+      total = avail; scaled = true;
+      notes.push("Dry powder cannot fund every double-down. All buys were scaled down to " + money(avail) + ".");
+    }
+    rows.forEach(function (r) { r.units = r.h.price > 0 ? r.amt / r.h.price : null; });
+    var dryChange = S.monthly - total;
+
+    // Trim ladder
+    var trims = [];
+    S.holdings.forEach(function (h) {
+      if (!(h.shares > 0 && h.cost > 0 && h.price > 0)) return;
+      var gain = (h.price / h.cost - 1) * 100;
+      var next = (h.rung || 0) + 1;
+      if (gain >= 50 * next) {
+        var p = TRIM[(next - 1) % 3];
+        var more = 0, k = next + 1;
+        while (gain >= 50 * k) { more++; k++; }
+        trims.push({ h: h, gain: gain, rung: next, pct: p, shares: h.shares * p / 100, proceeds: h.shares * p / 100 * h.price, more: more });
+      }
+    });
+
+    // Sleeve check
+    var sleeveNow = T.all > 0 ? T.byLayer.spec / T.all * 100 : 0;
+    var postVal = T.all + total;
+    var sleeveAfter = postVal > 0 ? (T.byLayer.spec + rows.filter(function (r) { return r.layer === "spec"; }).reduce(function (a, r) { return a + r.amt; }, 0)) / postVal * 100 : 0;
+
+    return { rows: rows, total: total, dryChange: dryChange, notes: notes, trims: trims, T: T, sleeveNow: sleeveNow, sleeveAfter: sleeveAfter, unallocated: unallocated, scaled: scaled };
+  }
+
+  /* ---------- Actions ---------- */
+  function recordMonth() {
+    var P = computePlan(), lines = [];
+    P.rows.forEach(function (r) {
+      if (!(r.amt > 0) || !(r.h.price > 0)) return;
+      var h = r.h, u = r.amt / h.price, old = (h.shares || 0) * (h.cost || h.price);
+      h.shares = (h.shares || 0) + u;
+      h.cost = (old + r.amt) / h.shares;
+      lines.push({ t: h.ticker || h.name, amt: r.amt, speed: r.speed, price: h.price, units: u });
+    });
+    S.dry = Math.max(0, (S.dry || 0) + P.dryChange);
+    S.history.unshift({ id: uid(), date: today(), kind: "buy", monthly: S.monthly, invested: P.total, dryChange: P.dryChange, dryAfter: S.dry, lines: lines });
+    save();
+  }
+  function recordTrim(id) {
+    var P = computePlan(), t = P.trims.filter(function (x) { return x.h.id === id; })[0];
+    if (!t) return;
+    t.h.shares -= t.shares;
+    t.h.rung = t.rung;
+    S.dry = (S.dry || 0) + t.proceeds;
+    S.history.unshift({ id: uid(), date: today(), kind: "trim", monthly: 0, invested: 0, dryChange: t.proceeds, dryAfter: S.dry, lines: [{ t: t.h.ticker || t.h.name, amt: -t.proceeds, speed: "trim " + t.pct + "% at +" + (50 * t.rung) + "%", price: t.h.price, units: -t.shares }] });
+    save();
+  }
+
+  var refreshedAt = null, pasteMsgText = "";
+  function nextInvest() {
+    var now = new Date(), y = now.getFullYear(), m = now.getMonth(), td = new Date(y, m, now.getDate());
+    function pick(yy, mm) { return new Date(yy, mm, Math.min(S.investDay, new Date(yy, mm + 1, 0).getDate())); }
+    var d = pick(y, m);
+    if (d < td) d = pick(y, m + 1);
+    var days = Math.round((d - td) / 864e5);
+    var txt = d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + (days === 0 ? " (today)" : days === 1 ? " (tomorrow)" : " (in " + days + " days)");
+    if (d.getDay() === 0 || d.getDay() === 6) txt += ". This is a weekend, so buy on the next trading day";
+    return { date: d, days: days, text: txt };
+  }
+
+  /* ---------- Views ---------- */
+  var tab = "plan";
+  var TABS = [["plan", "Monthly plan"], ["holdings", "Holdings"], ["portfolio", "Portfolio"], ["history", "History"], ["settings", "Settings"]];
+  var confirmRecord = false;
+
+  function renderTabs() {
+    document.getElementById("tabs").innerHTML = TABS.map(function (t) {
+      return '<button role="tab" data-tab="' + t[0] + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + "</button>";
+    }).join("");
+  }
+  function render() {
+    renderTabs();
+    confirmRecord = false;
+    var v = document.getElementById("view");
+    if (tab === "plan") { v.innerHTML = planShell(); renderPlanOut(); }
+    else if (tab === "holdings") v.innerHTML = holdingsView();
+    else if (tab === "portfolio") v.innerHTML = portfolioView();
+    else if (tab === "history") v.innerHTML = historyView();
+    else v.innerHTML = settingsView();
+  }
+
+  function planShell() {
+    var banner = S.example ? '<div class="note info">These are example holdings taken from the video (US dollar prices, illustrative share counts). Replace them in Holdings, or <button class="btn" data-act="startfresh">start with an empty portfolio</button>.</div>' : "";
+    return '<div class="stack">' + banner +
+      '<section class="panel"><div class="step"><div class="n">1</div><div class="stack" style="gap:12px">' +
+      '<div><h2>Contribute on your date</h2><p class="muted small">Same date every month. Never a lump sum.</p></div>' +
+      '<div class="grid">' +
+      '<label class="f">Monthly amount (' + esc(S.cur) + ')<input type="number" min="0" step="any" id="monthly" value="' + S.monthly + '"></label>' +
+      LAYERS.map(function (L) { return '<label class="f"><span><span class="sw" style="background:' + L.color + '"></span>' + L.name + ' %</span><input type="number" min="0" max="100" step="any" data-alloc="' + L.id + '" value="' + S.alloc[L.id] + '"></label>'; }).join("") +
+      '<label class="f">Dry powder balance (' + esc(S.cur) + ')<input type="number" min="0" step="any" id="dry" value="' + S.dry + '"></label>' +
+      '<label class="f">Investing day of the month<input type="number" min="1" max="31" step="1" id="investDay" value="' + S.investDay + '"></label>' +
+      '</div><div id="investNext" class="small"></div><div id="allocNote"></div></div></div></section>' +
+      '<div id="planOut" class="stack"></div></div>';
+  }
+
+  function pill(speed) {
+    var label = speed === "double" ? "Double down" : speed === "half" ? "Half speed" : "Normal";
+    return '<span class="pill ' + speed + '">' + label + "</span>";
+  }
+
+  function renderPlanOut() {
+    var sum = (S.alloc.core || 0) + (S.alloc.quality || 0) + (S.alloc.spec || 0);
+    var an = document.getElementById("allocNote");
+    if (an) {
+      var msgs = [];
+      if (Math.abs(sum - 100) > 0.001) msgs.push("Layer percentages add up to " + pct(sum, 1).replace(/\.0%$/, "%") + ", not 100%. The difference goes to dry powder (or you invest more than the monthly amount if it exceeds 100%).");
+      if (S.alloc.spec > S.specCap) msgs.push("Speculative allocation (" + S.alloc.spec + "%) is above the sleeve cap (" + S.specCap + "%). Buys will be limited by the cap.");
+      an.innerHTML = msgs.map(function (m) { return '<div class="note warn" style="margin-top:6px">' + esc(m) + "</div>"; }).join("");
+    }
+    var inx = document.getElementById("investNext");
+    if (inx) { var n0 = nextInvest(); inx.innerHTML = "<b>Next investing day:</b> " + esc(n0.text); }
+    var out = document.getElementById("planOut");
+    if (!out) return;
+    var P = computePlan();
+
+    function money0(n) { return (Math.abs(n % 1) < 0.005) ? S.cur + Math.round(n).toLocaleString("en-GB") : money(n); }
+    function joinNames(a) { return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]; }
+    function nm(r) { return r.h.ticker || r.h.name; }
+    var slideRows = P.rows.map(function (r) {
+      var label = r.speed === "double" ? "Double down" : r.speed === "half" ? "Half speed" : "Normal";
+      var flags = [];
+      if (r.both) flags.push("also up " + pct(r.up, 0) + " in 30 days");
+      if (r.capped) flags.push("buy limited by sleeve cap");
+      if (!(r.h.price > 0)) flags.push("enter a price");
+      return "<tr><td><b>" + esc(r.h.name || r.h.ticker) + '</b></td><td class="r"><input class="priceinp" type="number" min="0" step="any" aria-label="Price for ' + esc(r.h.name || r.h.ticker) + '" data-id="' + r.h.id + '" data-f="price" value="' + (r.h.price == null ? "" : r.h.price) + '">' + (r.h.priceManual ? '<div class="small muted">manual</div>' : "") + '</td><td class="r">' + (r.h.high > 0 ? money(r.h.high) : "–") + '</td><td class="r"><b>' + (r.off == null ? "–" : pct(Math.max(0, r.off), 0)) + '</b></td><td class="muted">' + (r.layer === "spec" ? "Sleeve" : r.trig + "%") + '</td><td><span class="verdict ' + r.speed + '">' + label + "&nbsp; " + money0(S.monthly * r.mult) + "</span>" + (flags.length ? '<div class="small muted">' + esc(flags.join(" · ")) + "</div>" : "") + '</td><td class="r"><b>' + money(r.amt) + "</b></td></tr>";
+    }).join("");
+    var halfNames = P.rows.filter(function (r) { return r.up != null && r.up >= S.halfPct; }).map(nm);
+    var noP30 = P.rows.filter(function (r) { return r.up == null; }).length;
+    var halfText = halfNames.length ? "<b>Half-speed check:</b> " + esc(joinNames(halfNames)) + " up " + S.halfPct + "% or more in 30 days" : "<b>Half-speed check:</b> none up " + S.halfPct + "% in 30 days";
+    if (noP30) halfText += ' <span class="muted">(' + noP30 + " without a 30-day price)</span>";
+    var nearNames = P.rows.filter(function (r) { return r.off != null && Math.abs(r.off - r.trig) <= 3; }).map(nm);
+    var nearText = nearNames.length ? joinNames(nearNames) + (nearNames.length > 1 ? " are" : " is") + " close to the line. Re-check on your date." : "";
+    function fmtStamp(v) { if (!v) return "not recorded"; var d = new Date(v); if (isNaN(d)) return "not recorded"; return String(v).length <= 10 ? d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : d.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); }
+    var refreshed = refreshedAt ? refreshedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : null;
+    var nd = nextInvest(), isToday = nd.days === 0;
+
+    var trimHtml = P.trims.length ? '<div class="tablewrap"><table><thead><tr><th>Holding</th><th class="r">Gain on cost</th><th>Ladder rung</th><th class="r">Sell</th><th class="r">Proceeds to dry powder</th><th></th></tr></thead><tbody>' +
+      P.trims.map(function (t) {
+        return "<tr><td><b>" + esc(t.h.ticker || t.h.name) + '</b></td><td class="r">+' + pct(t.gain, 0) + "</td><td>+" + (50 * t.rung) + "% rung" + (t.more ? ' <span class="muted small">(' + t.more + " more rung" + (t.more > 1 ? "s" : "") + " pending after this)</span>" : "") + '</td><td class="r">' + t.pct + "% = " + t.shares.toLocaleString("en-GB", { maximumFractionDigits: 4 }) + ' sh</td><td class="r">' + money(t.proceeds) + '</td><td class="r"><button class="btn" data-trim="' + t.h.id + '">Record trim</button></td></tr>';
+      }).join("") + "</tbody></table></div>" : '<p class="muted">No holding has reached its next trim rung. Rungs are +50%, +100%, +150% (trim 10%, 20%, 30%), then the cycle repeats at +200%, +250%, +300%.</p>';
+
+    var sleeveOver = P.sleeveAfter > S.specCap + 0.01;
+    var after = (S.dry || 0) + P.dryChange;
+
+    out.innerHTML =
+      '<section class="panel"><div class="step"><div class="n">2</div><div class="stack" style="gap:12px;min-width:0">' +
+      '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2>Price vs. the 52-week high</h2><p class="muted small">Each holding is checked against its 52-week high. Verdict amounts are for your ' + money0(S.monthly) + ' month: normal 50%, double down 150%, half speed 25%.</p></div>' +
+      '<div style="text-align:right"><button class="btn primary" data-act="refresh">Refresh</button><div class="small muted" style="margin-top:4px">' + (refreshed ? "Refreshed " + refreshed : "Not refreshed yet") + "</div></div></div>" +
+      (isToday ? '<div class="note" style="background:var(--go-bg);color:var(--go)"><b>Today is your investing day.</b> Refresh, then act on the verdicts below.</div>' : "") +
+      '<div class="tablewrap slide"><table class="slidetbl"><thead><tr><th>Holding</th><th class="r">Price</th><th class="r">52-wk high</th><th class="r">Off high</th><th>Rule</th><th>Verdict</th><th class="r">Your buy</th></tr></thead><tbody>' + (slideRows || '<tr><td colspan="7" class="muted">Add holdings in the Holdings tab.</td></tr>') + "</tbody></table></div>" +
+      '<div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px"><div class="halfbox">' + halfText + "</div>" + (nearText ? '<p class="small muted" style="font-style:italic;max-width:320px">' + esc(nearText) + "</p>" : "") + "</div>" +
+      '<p class="small muted">Prices last updated: ' + esc(fmtStamp(S.pricesAsOf)) + ". Live quotes are not pulled automatically: type over any price in the table to override it (it is kept when you Refresh), or update prices in Holdings. Double-down rule: " + S.trig.quality + "% below the 52-week high for stocks, " + S.trig.core + "% for the index core.</p>" +
+      '<details ' + (pasteMsgText ? "open" : "") + '><summary class="small" style="cursor:pointer">Update prices by pasting</summary><div class="stack" style="gap:8px;margin-top:8px"><p class="small muted">One holding per line: ticker, price, 52-week high, price 30 days ago. The last two are optional. Example: <code>NVDA 162.85 239.24 150</code></p><textarea id="paste" spellcheck="false" placeholder="NVDA 162.85 239.24 150"></textarea><div class="row"><button class="btn" data-act="applypaste">Apply prices</button><span class="small muted" id="pasteMsg">' + esc(pasteMsgText) + '</span></div></div></details>' +
+      "</div></div></section>" +
+
+      '<section class="panel"><div class="step"><div class="n">3</div><div class="stack" style="gap:12px;min-width:0"><div><h2>This month</h2><p class="muted small">Normal invests 50% of a holding\'s share, double down 150%, half speed 25%. The rest sits in dry powder (T-bills or a money market fund).</p></div>' +
+      '<div class="grid">' +
+      '<div class="tile"><div class="k">Invest now</div><div class="v">' + money(P.total) + "</div></div>" +
+      '<div class="tile"><div class="k">' + (P.dryChange >= 0 ? "Add to dry powder" : "Take from dry powder") + '</div><div class="v">' + money(Math.abs(P.dryChange)) + "</div></div>" +
+      '<div class="tile"><div class="k">Dry powder after</div><div class="v">' + money(after) + "</div></div>" +
+      '<div class="tile"><div class="k">Monthly amount</div><div class="v">' + money(S.monthly) + "</div></div></div>" +
+      P.notes.map(function (n) { return '<div class="note warn">' + esc(n) + "</div>"; }).join("") +
+      '<div class="row"><button class="btn primary" data-act="record" ' + (P.rows.length ? "" : "disabled") + ">" + (confirmRecord ? "Confirm: add these buys to holdings" : "I made these purchases") + "</button>" +
+      (confirmRecord ? '<button class="btn" data-act="cancelrec">Cancel</button>' : "") +
+      '<span class="muted small">Updates shares, average cost, dry powder and history.</span></div></div></div></section>' +
+
+      '<section class="panel"><div class="step"><div class="n">4</div><div class="stack" style="gap:12px;min-width:0"><div><h2>Trim ladder</h2><p class="muted small">Trimming is insurance, not a verdict on the thesis. Never sell 100% for risk management. Proceeds go back to dry powder and are redeployed over 12 to 24 months.</p></div>' + trimHtml + "</div></div></section>" +
+
+      '<section class="panel"><div class="step"><div class="n">5</div><div class="stack" style="gap:12px;min-width:0"><div><h2>Speculative sleeve check</h2></div>' +
+      '<div class="grid"><div class="tile"><div class="k">Sleeve now</div><div class="v">' + pct(P.sleeveNow) + '</div></div><div class="tile"><div class="k">Sleeve after buys</div><div class="v">' + pct(P.sleeveAfter) + '</div></div><div class="tile"><div class="k">Cap</div><div class="v">' + pct(S.specCap, 0) + "</div></div></div>" +
+      (P.T.byLayer.spec > 0 && P.sleeveNow > S.specCap ? '<div class="note warn">The sleeve is already above its cap. No new speculative money is added until it falls back under ' + S.specCap + "%.</div>" : "") +
+      (sleeveOver && !(P.T.byLayer.spec > 0 && P.sleeveNow > S.specCap) ? '<div class="note warn">The sleeve would end above the cap after this month.</div>' : "") + "</div></div></section>";
+  }
+
+  function holdingsView() {
+    return '<div class="stack"><div class="note info">Type values and press Tab or Enter. Everything saves automatically. Weight splits a layer\'s money between its holdings (1 = equal). Last trim rung is the highest +50% step you have already trimmed at (0 if none).</div>' +
+      LAYERS.map(function (L) {
+        var hs = S.holdings.filter(function (h) { return h.layer === L.id; });
+        return '<section class="panel"><div class="layerhead"><div><h3><span class="sw" style="background:' + L.color + '"></span>' + L.name + '</h3><span class="muted small">' + L.sub + '</span></div><button class="btn" data-add="' + L.id + '">Add holding</button></div>' +
+          (hs.length ? '<div class="tablewrap"><table class="holdtbl"><thead><tr><th>Name</th><th>Ticker</th><th>Weight</th><th>Shares</th><th>Avg cost</th><th>Price</th><th>52-wk high</th><th>Price 30d ago</th><th>Last trim rung</th><th></th></tr></thead><tbody>' +
+            hs.map(function (h) {
+              function inp(f, w, step) { return '<td><input style="min-width:' + w + 'px" type="number" step="any" min="0" data-id="' + h.id + '" data-f="' + f + '" value="' + (h[f] == null ? "" : h[f]) + '"></td>'; }
+              return '<tr><td><input style="min-width:130px" data-id="' + h.id + '" data-f="name" value="' + esc(h.name) + '"></td><td><input style="min-width:70px" data-id="' + h.id + '" data-f="ticker" value="' + esc(h.ticker) + '"></td>' +
+                inp("w", 60) + inp("shares", 80) + inp("cost", 80) + inp("price", 80) + inp("high", 80) + inp("p30", 80) + inp("rung", 60) +
+                '<td><button class="btn danger" data-del="' + h.id + '" aria-label="Remove ' + esc(h.name) + '">Remove</button></td></tr>';
+            }).join("") + "</tbody></table></div>" : '<p class="muted">Nothing here yet.</p>') + "</section>";
+      }).join("") + "</div>";
+  }
+
+  function portfolioView() {
+    var T = totals(), P = computePlan();
+    var layerRows = LAYERS.map(function (L) {
+      var w = T.all > 0 ? T.byLayer[L.id] / T.all * 100 : 0, tgt = S.alloc[L.id] || 0;
+      return '<div style="margin-bottom:14px"><div class="row" style="justify-content:space-between;gap:8px"><span><span class="sw" style="background:' + L.color + '"></span><b>' + L.name + '</b></span><span class="num">' + pct(w) + ' <span class="muted">of portfolio · target ' + pct(tgt, 0) + " · " + money(T.byLayer[L.id]) + "</span></span></div>" +
+        '<div class="bar" style="margin-top:6px" role="img" aria-label="' + L.name + " " + pct(w) + ", target " + tgt + '%"><i style="width:' + Math.min(100, w) + "%;background:" + L.color + '"></i><span class="tick" style="left:' + Math.min(100, tgt) + '%"></span></div></div>';
+    }).join("");
+    var hr = S.holdings.map(function (h) {
+      var v = (h.shares || 0) * (h.price || 0), gain = h.cost > 0 && h.price > 0 ? (h.price / h.cost - 1) * 100 : null;
+      var r = P.rows.filter(function (x) { return x.h.id === h.id; })[0];
+      var layer = LAYERS.filter(function (l) { return l.id === h.layer; })[0];
+      return "<tr><td><b>" + esc(h.ticker || h.name) + '</b></td><td><span class="sw" style="background:' + layer.color + '"></span>' + layer.name + '</td><td class="r">' + (h.shares || 0).toLocaleString("en-GB", { maximumFractionDigits: 4 }) + '</td><td class="r">' + money(v) + '</td><td class="r">' + pct(T.all > 0 ? v / T.all * 100 : 0) + '</td><td class="r">' + (gain == null ? "–" : (gain >= 0 ? "+" : "") + pct(gain, 0)) + "</td><td>" + (r ? pill(r.speed) : "") + "</td></tr>";
+    }).join("");
+    return '<div class="stack"><section class="panel"><div class="grid"><div class="tile"><div class="k">Invested value</div><div class="v">' + money(T.all) + '</div></div><div class="tile"><div class="k">Dry powder</div><div class="v">' + money(S.dry) + '</div></div><div class="tile"><div class="k">Total incl. dry powder</div><div class="v">' + money(T.all + (S.dry || 0)) + "</div></div></div></section>" +
+      '<section class="panel"><h2 style="margin-bottom:12px">Layers against target</h2>' + layerRows + '<p class="muted small">The dark tick marks the target. Weights use invested holdings only, not dry powder.</p>' +
+      (T.all > 0 && T.byLayer.spec / T.all * 100 > S.specCap ? '<div class="note warn" style="margin-top:8px">Speculative sleeve is ' + pct(T.byLayer.spec / T.all * 100) + ", above the " + S.specCap + "% cap.</div>" : "") + "</section>" +
+      '<section class="panel"><h2 style="margin-bottom:8px">Holdings</h2><div class="tablewrap"><table><thead><tr><th>Holding</th><th>Layer</th><th class="r">Shares</th><th class="r">Value</th><th class="r">Weight</th><th class="r">Gain on cost</th><th>Speed now</th></tr></thead><tbody>' + (hr || '<tr><td colspan="7" class="muted">No holdings yet.</td></tr>') + "</tbody></table></div></section></div>";
+  }
+
+  function historyView() {
+    if (!S.history.length) return '<section class="panel"><h2>History</h2><p class="muted" style="margin-top:6px">Nothing recorded yet. After you make your purchases, use "I made these purchases" on the Monthly plan tab and each month will appear here.</p></section>';
+    return '<div class="stack">' + S.history.map(function (e) {
+      return '<section class="panel"><div class="row" style="justify-content:space-between;align-items:baseline"><h3>' + esc(e.date) + " · " + (e.kind === "trim" ? "Trim" : "Monthly buy") + '</h3><span class="muted small num">' + (e.kind === "trim" ? "Proceeds " + money(e.dryChange) : "Invested " + money(e.invested) + " of " + money(e.monthly)) + " · dry powder after " + money(e.dryAfter) + "</span></div>" +
+        '<div class="tablewrap"><table><tbody>' + e.lines.map(function (l) { return "<tr><td><b>" + esc(l.t) + "</b></td><td>" + esc(l.speed.charAt(0).toUpperCase() + l.speed.slice(1)) + '</td><td class="r">' + money(l.amt) + '</td><td class="r muted">' + l.units.toLocaleString("en-GB", { maximumFractionDigits: 4 }) + " @ " + money(l.price) + "</td></tr>"; }).join("") + "</tbody></table></div></section>";
+    }).join("") + "</div>";
+  }
+
+  function settingsView() {
+    return '<div class="stack"><section class="panel"><h2 style="margin-bottom:12px">Rules</h2><div class="grid">' +
+      '<label class="f">Currency symbol<input id="cur" value="' + esc(S.cur) + '" maxlength="3"></label>' +
+      '<label class="f">Speculative sleeve cap (% of portfolio)<input type="number" min="0" max="100" step="any" id="specCap" value="' + S.specCap + '"></label>' +
+      '<label class="f">Half speed: up at least (%) in 30 days<input type="number" min="0" step="any" id="halfPct" value="' + S.halfPct + '"></label>' +
+      LAYERS.map(function (L) { return '<label class="f">Double down: ' + L.name + ' below 52-wk high (%)<input type="number" min="0" step="any" data-trig="' + L.id + '" value="' + S.trig[L.id] + '"></label>'; }).join("") +
+      '</div><p class="muted small" style="margin-top:10px">The video uses 20% for individual stocks and 10% for the S&amp;P 500, because an index does not fall like a single stock. Trim rungs are fixed at +50%, +100%, +150% with 10%, 20%, 30%, repeating.</p></section>' +
+      '<section class="panel"><h2 style="margin-bottom:6px">Backup</h2><p class="muted small" style="margin-bottom:10px">Your data lives only in this browser. Copy the text below somewhere safe, and paste it back here to restore it on another device.</p>' +
+      '<textarea id="backup" spellcheck="false">' + esc(JSON.stringify(S)) + '</textarea><div class="row" style="margin-top:10px"><button class="btn" data-act="copy">Copy</button><button class="btn" data-act="import">Restore from text</button><span class="small muted" id="backupMsg"></span></div></section>' +
+      '<section class="panel"><h2 style="margin-bottom:6px">Reset</h2><div class="row"><button class="btn" data-act="loadex">Load the video examples</button><button class="btn danger" data-act="startfresh">Empty everything</button></div></section></div>';
+  }
+
+  /* ---------- Events ---------- */
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.tab) { tab = b.dataset.tab; render(); return; }
+    if (b.dataset.add) { S.holdings.push({ id: uid(), layer: b.dataset.add, name: "", ticker: "", w: 1, shares: 0, cost: null, price: null, high: null, p30: null, rung: 0 }); S.example = false; save(); render(); return; }
+    if (b.dataset.del) { S.holdings = S.holdings.filter(function (h) { return h.id !== b.dataset.del; }); save(); render(); return; }
+    if (b.dataset.trim) { recordTrim(b.dataset.trim); renderPlanOut(); return; }
+    var a = b.dataset.act;
+    if (a === "record") {
+      if (!confirmRecord) { confirmRecord = true; renderPlanOut(); return; }
+      recordMonth(); S.example = false; confirmRecord = false; render(); return;
+    }
+    if (a === "refresh") { refreshedAt = new Date(); renderPlanOut(); return; }
+    if (a === "applypaste") {
+      var box = document.getElementById("paste"), pm = document.getElementById("pasteMsg"), upd = 0, unknown = [];
+      box.value.split("\n").forEach(function (line) {
+        var tk = line.trim().split(/[\s;|\t]+/).filter(Boolean);
+        if (tk.length < 2) return;
+        var key = tk[0].toUpperCase();
+        var h = S.holdings.filter(function (x) { return (x.ticker || "").toUpperCase() === key; })[0];
+        if (!h) { unknown.push(tk[0]); return; }
+        var v = tk.slice(1).map(function (x) { return parseFloat(x.replace(/[^0-9.\-]/g, "")); });
+        if (isFinite(v[0])) h.price = v[0];
+        if (v.length > 1 && isFinite(v[1])) h.high = v[1];
+        if (v.length > 2 && isFinite(v[2])) h.p30 = v[2];
+        upd++;
+      });
+      if (upd) { S.pricesAsOf = new Date().toISOString(); S.example = false; refreshedAt = new Date(); save(); pasteMsgText = "Updated " + upd + (upd > 1 ? " holdings" : " holding") + (unknown.length ? ". Not found: " + unknown.join(", ") : "") + "."; renderPlanOut(); }
+      else pm.textContent = unknown.length ? "No match for: " + unknown.join(", ") + ". Tickers must match your Holdings tab." : "Nothing to apply.";
+      return;
+    }
+    if (a === "cancelrec") { confirmRecord = false; renderPlanOut(); return; }
+    if (a === "startfresh") { S = blank(); save(); tab = "holdings"; render(); return; }
+    if (a === "loadex") { S = example(); save(); tab = "plan"; render(); return; }
+    if (a === "copy") {
+      var ta = document.getElementById("backup"); ta.select();
+      var msg = document.getElementById("backupMsg");
+      try { navigator.clipboard.writeText(ta.value).then(function () { msg.textContent = "Copied."; }, function () { msg.textContent = "Press Ctrl/Cmd+C to copy the selected text."; }); }
+      catch (err) { msg.textContent = "Press Ctrl/Cmd+C to copy the selected text."; }
+      return;
+    }
+    if (a === "import") {
+      var m = document.getElementById("backupMsg");
+      try {
+        var d = JSON.parse(document.getElementById("backup").value);
+        if (!d || !Array.isArray(d.holdings) || !d.alloc) throw new Error("bad");
+        S = d; save(); render();
+      } catch (err) { m.textContent = "That text is not a valid backup."; }
+    }
+  });
+
+  document.addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.dataset.f) {
+      var h = S.holdings.filter(function (x) { return x.id === t.dataset.id; })[0];
+      if (!h) return;
+      var f = t.dataset.f;
+      h[f] = (f === "name" || f === "ticker") ? t.value : (f === "w" ? (num(t.value) || 1) : f === "rung" ? Math.max(0, Math.floor(num(t.value) || 0)) : num(t.value));
+      if (f === "shares" && h.shares == null) h.shares = 0;
+      if (f === "price" || f === "high" || f === "p30") S.pricesAsOf = new Date().toISOString();
+      if (f === "price") h.priceManual = true;
+      S.example = false; save();
+      if (tab === "plan") renderPlanOut();
+      return;
+    }
+    if (t.id === "investDay") { S.investDay = Math.min(31, Math.max(1, parseInt(t.value, 10) || 1)); save(); renderPlanOut(); return; }
+    if (t.id === "monthly") { S.monthly = Math.max(0, num(t.value) || 0); save(); renderPlanOut(); return; }
+    if (t.id === "dry") { S.dry = Math.max(0, num(t.value) || 0); save(); renderPlanOut(); return; }
+    if (t.dataset.alloc) { S.alloc[t.dataset.alloc] = Math.max(0, num(t.value) || 0); save(); renderPlanOut(); return; }
+    if (t.id === "cur") { S.cur = t.value || "£"; save(); return; }
+    if (t.id === "specCap") { S.specCap = Math.min(100, Math.max(0, num(t.value) || 0)); save(); return; }
+    if (t.id === "halfPct") { S.halfPct = Math.max(0, num(t.value) || 0); save(); return; }
+    if (t.dataset.trig) { S.trig[t.dataset.trig] = Math.max(0, num(t.value) || 0); save(); return; }
+  });
+
+  // Plan inputs also respond while typing so results stay current
+  document.addEventListener("input", function (e) {
+    var t = e.target;
+    if (tab !== "plan") return;
+    if (t.id === "monthly") { S.monthly = Math.max(0, num(t.value) || 0); save(); renderPlanOut(); }
+    else if (t.id === "dry") { S.dry = Math.max(0, num(t.value) || 0); save(); renderPlanOut(); }
+    else if (t.id === "investDay") { var dv = parseInt(t.value, 10); if (dv >= 1 && dv <= 31) { S.investDay = dv; save(); renderPlanOut(); } }
+    else if (t.dataset.alloc) { S.alloc[t.dataset.alloc] = Math.max(0, num(t.value) || 0); save(); renderPlanOut(); }
+  });
+
+  render();
+  if (storageOK) document.getElementById("saveState").textContent = S.example ? "Showing example data" : "Saved in this browser";
+  else document.getElementById("saveState").textContent = "Browser storage unavailable. Use Settings > Backup.";
+})();
+</script>
+
+</body>
+</html>
