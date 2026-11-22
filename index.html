@@ -409,6 +409,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     P.rows.forEach(function (r) { buys[r.layer] += r.amt; });
     var after = { core: T.byLayer.core + buys.core, quality: T.byLayer.quality + buys.quality, spec: T.byLayer.spec + buys.spec };
     var afterAll = T.all + P.total;
+    var dryAfter = (S.dry || 0) + P.dryChange;
     function share(v, tot) { return tot > 0 ? v / tot * 100 : 0; }
     function stack(vals, tot, label) {
       return '<div class="small muted" style="margin:10px 0 4px">' + label + '</div><div class="bar" style="height:14px;display:flex" role="img" aria-label="' + esc(label) + '">' +
@@ -425,6 +426,11 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       '<p class="small muted" style="margin-top:8px">Return = shares × (current price − average cost), against ' + money(cost) + ' paid.' + (missing ? " " + missing + (missing > 1 ? " holdings are" : " holding is") + " left out of the return because average cost or price is missing." : "") + "</p>" +
       '<div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Sleeve</th><th class="r">Value now</th><th class="r">Share</th><th class="r">Next buy</th><th class="r">Value after buy</th><th class="r">Share</th></tr></thead><tbody>' + rows +
       '<tr><td><b>Total</b></td><td class="r"><b>' + money(T.all) + '</b></td><td class="r muted">100%</td><td class="r">' + (P.total > 0 ? "+" + money(P.total) : "–") + '</td><td class="r"><b>' + money(afterAll) + '</b></td><td class="r muted">100%</td></tr></tbody></table></div>' +
+      '<h3 style="margin:16px 0 8px">Dry powder</h3><div class="grid">' +
+      '<div class="tile"><div class="k">Dry powder now</div><div class="v">' + money(S.dry || 0) + '</div></div>' +
+      '<div class="tile"><div class="k">' + (P.dryChange >= 0 ? "Added this round" : "Used this round") + '</div><div class="v" style="color:' + (P.dryChange >= 0 ? "var(--go)" : "var(--slow)") + '">' + (P.dryChange >= 0 ? "+" : "-") + money(Math.abs(P.dryChange)) + '</div></div>' +
+      '<div class="tile"><div class="k">Dry powder after next round</div><div class="v">' + money(dryAfter) + '</div></div>' +
+      '<div class="tile"><div class="k">Total incl. dry powder, after</div><div class="v">' + money(afterAll + dryAfter) + '</div><div class="small muted">now ' + money(T.all + (S.dry || 0)) + "</div></div></div>" +
       stack(T.byLayer, T.all, "Holdings by sleeve now") + stack(after, afterAll, "Holdings by sleeve after next investment") +
       '<p class="small muted" style="margin-top:8px">"After" adds the buys from step 2 at today\'s prices. It does not include trims or price moves.</p></section>';
   }
