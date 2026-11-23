@@ -3,145 +3,172 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Three Speeds DCA</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="iPlouton">
+<title>iPlouton</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
-/* Layout: a single working column with a tab bar; Plan tab reads top to bottom as the five-step monthly playbook. */
+/* iOS-style design: grouped lists on a grey ground, one blue accent, system font, bottom tab bar. */
 :root {
-  --bg: #f3f5f4;
-  --surface: #ffffff;
-  --ink: #141a17;
-  --muted: #5d6963;
-  --line: #dde3e0;
-  --accent: #141a17;
-  --accent-ink: #ffffff;
-  --go: #2f7a1f;
-  --go-bg: #e4f1df;
-  --slow: #a86500;
-  --slow-bg: #faedd3;
-  --warn: #b3261e;
-  --warn-bg: #fbe4e1;
-  --norm-bg: #e8ece9;
-  --core: #141a17;
-  --quality: #6b7a72;
-  --spec: #c9402c;
-  --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
-  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bg: #f2f2f7; --surface: #ffffff; --ink: #000000; --muted: #6c6c70; --line: #e0e0e6; --fill: #f2f2f7;
+  --blue: #007aff; --tint: #e5f1ff; --accent: #007aff; --accent-ink: #ffffff;
+  --go: #1f7a38; --go-bg: #e3f6e8; --slow: #a45a00; --slow-bg: #fff0d6; --warn: #d70015; --warn-bg: #ffe5e8; --norm-bg: #ececf1;
+  --core: #007aff; --quality: #af52de; --spec: #ff9500;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1412; --surface: #171d1a; --ink: #e9eeeb; --muted: #94a19a; --line: #2a332f;
-    --accent: #e9eeeb; --accent-ink: #0f1412;
-    --go: #7cc96a; --go-bg: #1c2e18; --slow: #e3a640; --slow-bg: #33280f;
-    --warn: #f08a80; --warn-bg: #3a1d1a; --norm-bg: #232b27;
-    --core: #e9eeeb; --quality: #8a9a91; --spec: #ee7662;
+    --bg: #000000; --surface: #1c1c1e; --ink: #ffffff; --muted: #98989f; --line: #38383a; --fill: #2c2c2e;
+    --blue: #0a84ff; --tint: #10294a; --accent: #0a84ff; --accent-ink: #ffffff;
+    --go: #30d158; --go-bg: #12301b; --slow: #ff9f0a; --slow-bg: #3a2a08; --warn: #ff6961; --warn-bg: #3d1a1c; --norm-bg: #2c2c2e;
+    --core: #0a84ff; --quality: #bf5af2; --spec: #ff9f0a;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f1412; --surface: #171d1a; --ink: #e9eeeb; --muted: #94a19a; --line: #2a332f;
-  --accent: #e9eeeb; --accent-ink: #0f1412;
-  --go: #7cc96a; --go-bg: #1c2e18; --slow: #e3a640; --slow-bg: #33280f;
-  --warn: #f08a80; --warn-bg: #3a1d1a; --norm-bg: #232b27;
-  --core: #e9eeeb; --quality: #8a9a91; --spec: #ee7662;
+  --bg: #000000; --surface: #1c1c1e; --ink: #ffffff; --muted: #98989f; --line: #38383a; --fill: #2c2c2e;
+  --blue: #0a84ff; --tint: #10294a; --accent: #0a84ff; --accent-ink: #ffffff;
+  --go: #30d158; --go-bg: #12301b; --slow: #ff9f0a; --slow-bg: #3a2a08; --warn: #ff6961; --warn-bg: #3d1a1c; --norm-bg: #2c2c2e;
+  --core: #0a84ff; --quality: #bf5af2; --spec: #ff9f0a;
   color-scheme: dark;
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
-  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.5;
-  padding-block: 20px 56px;
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.4;
+  padding-block: 12px 110px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
-.wrap { max-width: 1040px; margin: 0 auto; }
-h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
-h1 { font-size: 26px; letter-spacing: -0.01em; }
-h2 { font-size: 18px; }
-h3 { font-size: 15px; }
+.wrap { max-width: 640px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h1 { font-size: 34px; font-weight: 700; line-height: 1.1; }
+h2 { font-size: 20px; font-weight: 700; }
+h3 { font-size: 17px; font-weight: 600; }
 p { margin: 0; }
 .muted { color: var(--muted); }
-.small { font-size: 12.5px; }
+.small { font-size: 13px; }
 .num { font-variant-numeric: tabular-nums; }
-header.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-nav.tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
-nav.tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; font: 500 14px var(--font-body); color: var(--muted); cursor: pointer; white-space: nowrap; }
-nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
-.stack { display: flex; flex-direction: column; gap: 16px; }
+.apphead { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; margin: 6px 0 14px; }
+.apphead .eyebrow { font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: .02em; }
+.iconbtn { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--tint); color: var(--blue); font: 700 18px var(--font-display); cursor: pointer; flex: 0 0 auto; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [data-open]:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* tab bar */
+nav.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: color-mix(in srgb, var(--surface) 88%, transparent); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+nav.tabbar .in { max-width: 640px; margin: 0 auto; display: flex; }
+nav.tabbar button { flex: 1; background: none; border: 0; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 2px; font: 600 10.5px var(--font-body); padding: 4px 0; cursor: pointer; }
+nav.tabbar button[aria-selected="true"] { color: var(--blue); }
+
+/* lists */
+.sechead { display: flex; align-items: center; gap: 10px; margin: 6px 4px 8px; }
+.sechead > div:first-of-type { min-width: 0; flex: 1; }
+.badge { width: 26px; height: 26px; border-radius: 50%; background: var(--blue); color: #fff; font: 700 13px var(--font-display); display: grid; place-items: center; flex: 0 0 auto; }
+.grouphead { font-size: 13px; color: var(--muted); margin: 14px 8px 6px; text-transform: uppercase; letter-spacing: .03em; font-weight: 600; }
+.list { background: var(--surface); border-radius: 12px; overflow: hidden; }
+.li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-top: 1px solid var(--line); width: 100%; font: inherit; color: inherit; text-align: left; }
+.list > .li:first-child { border-top: 0; }
+.li > span:first-child { flex: 1 1 auto; min-width: 0; }
+.li .val i { font-style: normal; white-space: nowrap; }
+.li .val { flex: 0 0 auto; display: flex; align-items: center; gap: 4px; color: var(--muted); min-width: 0; }
+.li .val input { border: 0; background: transparent; text-align: right; width: 96px; padding: 2px 0; font-size: 16px; color: var(--ink); border-radius: 0; font-variant-numeric: tabular-nums; }
+.li .val select { border: 0; background: transparent; color: var(--ink); width: auto; font-size: 16px; text-align: right; padding: 2px 0; }
+.li.add { color: var(--blue); font-weight: 600; background: transparent; border-left: 0; border-right: 0; border-bottom: 0; cursor: pointer; }
+.foot { font-size: 13px; color: var(--muted); margin: 6px 8px 0; }
+.hrow { cursor: pointer; align-items: flex-start; }
+.hmain { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.hl1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hl2 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pin { display: inline-flex; align-items: center; gap: 2px; background: var(--fill); border-radius: 8px; padding: 2px 8px; color: var(--muted); }
+.pin input { border: 0; background: transparent; width: 88px; font-size: 16px; padding: 3px 0; color: var(--ink); font-variant-numeric: tabular-nums; }
+.hbuy { text-align: right; flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+.hbuy b { font-size: 18px; display: block; }
+.chev { color: var(--muted); font-size: 22px; line-height: 1; }
+
+/* hero */
+.hero { background: linear-gradient(145deg, #0a5fd0, #4a3fc4); color: #fff; border-radius: 20px; padding: 20px; }
+.hero .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; opacity: .9; }
+.hero .big { font: 700 40px/1.1 var(--font-display); margin: 6px 0; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.hero .sub { font-size: 15px; opacity: .95; }
+.hero .hnote { background: rgba(255,255,255,.18); border-radius: 10px; padding: 8px 12px; font-size: 14px; margin-top: 10px; }
+.hero .hbtns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.hero .hfoot { font-size: 13px; opacity: .9; margin-top: 12px; }
+.btn.onhero { background: #fff; color: #0a4fb0; border-color: #fff; }
+.btn.ghost { background: rgba(255,255,255,.2); color: #fff; border-color: transparent; }
+
+/* cards and controls */
+.panel { background: var(--surface); border-radius: 16px; padding: 16px; }
+.stack { display: flex; flex-direction: column; gap: 18px; }
 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
-.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-label.f { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; }
-input, select, textarea {
-  font: 14px var(--font-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line);
-  border-radius: 6px; padding: 7px 9px; width: 100%; min-width: 0;
-}
+.grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); }
+label.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); min-width: 0; }
+input, select, textarea { font: 16px var(--font-body); color: var(--ink); background: var(--fill); border: 0; border-radius: 10px; padding: 9px 11px; width: 100%; min-width: 0; }
 input[type=number] { font-variant-numeric: tabular-nums; }
-.btn { font: 500 13px var(--font-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 7px 12px; border-radius: 6px; cursor: pointer; }
-.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.btn.danger { color: var(--warn); }
+.btn { font: 600 15px var(--font-body); border: 0; background: var(--tint); color: var(--blue); padding: 9px 16px; border-radius: 10px; cursor: pointer; }
+.btn.primary { background: var(--blue); color: #fff; }
+.btn.danger { background: var(--warn-bg); color: var(--warn); }
+.btn.block { width: 100%; margin-top: 14px; padding: 12px; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
-.tile { background: var(--bg); border-radius: 6px; padding: 12px; }
-.tile .k { font-size: 12px; color: var(--muted); }
+a { color: var(--blue); }
+.tile { background: var(--fill); border-radius: 12px; padding: 12px; }
+.tile .k { font-size: 13px; color: var(--muted); }
 .tile .v { font: 700 22px var(--font-display); font-variant-numeric: tabular-nums; }
-.step { display: grid; grid-template-columns: 28px 1fr; gap: 12px; }
-.step .n { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font: 700 13px var(--font-display); display: grid; place-items: center; }
 .tablewrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
-th { text-align: left; font-size: 12px; font-weight: 500; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-td { padding: 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
 td.r, th.r { text-align: right; }
 tr:last-child td { border-bottom: 0; }
-.pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 .pill.double { background: var(--go-bg); color: var(--go); }
 .pill.half { background: var(--slow-bg); color: var(--slow); }
 .pill.normal { background: var(--norm-bg); color: var(--ink); }
 .pill.warn { background: var(--warn-bg); color: var(--warn); }
-.note { border-radius: 6px; padding: 9px 12px; font-size: 13px; }
+.note { border-radius: 12px; padding: 10px 14px; font-size: 14px; }
 .note.warn { background: var(--warn-bg); color: var(--warn); }
-.note.info { background: var(--norm-bg); }
+.note.info { background: var(--tint); color: var(--ink); }
 .bar { height: 10px; background: var(--norm-bg); border-radius: 5px; position: relative; overflow: hidden; }
 .bar i { position: absolute; inset: 0 auto 0 0; border-radius: 5px; }
 .tick { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--ink); }
-.holdtbl input { padding: 5px 6px; font-size: 13px; }
-.holdtbl td { padding: 5px 4px; }
-.layerhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
-.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
-textarea { min-height: 120px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
-table.slidetbl thead th { background: var(--accent); color: var(--accent-ink); font-weight: 600; font-size: 13px; padding: 10px 10px; border-bottom: 0; }
-table.slidetbl td { padding: 11px 10px; }
-table.slidetbl tbody tr:nth-child(even) td { background: var(--bg); }
-.verdict { font-weight: 700; white-space: nowrap; }
-.verdict.double { color: var(--go); }
-.verdict.half { color: var(--slow); }
-.verdict.normal { color: var(--ink); }
-.halfbox { border: 2px solid var(--slow); color: var(--ink); border-radius: 8px; padding: 9px 14px; }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; }
+.halfbox { border: 2px solid var(--slow); border-radius: 12px; padding: 9px 14px; font-size: 14px; }
 .halfbox b { color: var(--slow); }
-input.priceinp { width: 100px; text-align: right; padding: 5px 7px; font-size: 14px; }
+textarea { min-height: 120px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
 svg .gl { stroke: var(--line); stroke-width: 1; }
-svg .ax { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
-svg .lb { fill: var(--ink); font-size: 12px; font-family: var(--font-body); }
-.tip { position: absolute; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; font-size: 12px; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
-code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
-@media (max-width: 560px) { h1 { font-size: 22px; } }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+svg#pfchart { overflow: visible; }
+svg .ax { fill: var(--muted); font-size: 17px; font-family: var(--font-body); }
+svg .lb { fill: var(--ink); font-size: 18px; font-family: var(--font-body); }
+.tip { position: absolute; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; font-size: 12px; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,.15); }
+code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--fill); padding: 1px 5px; border-radius: 4px; }
+details summary { cursor: pointer; color: var(--blue); }
+
+/* sheet */
+.sheetwrap { position: fixed; inset: 0; z-index: 50; }
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.4); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; margin: 0 auto; width: 100%; max-width: 640px; max-height: 90%; overflow-y: auto; background: var(--bg); border-radius: 20px 20px 0 0; padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.shead { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+.link { background: none; border: 0; color: var(--blue); font: 600 16px var(--font-body); cursor: pointer; padding: 6px 0; }
+.how p { margin: 4px 0 12px; font-size: 15px; }
+@media (max-width: 480px) { #saveState { display: none; } }
+@media (max-width: 420px) { h1 { font-size: 30px; } .hero .big { font-size: 34px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
 </head>
 <body>
 <div class="wrap">
-  <header class="top">
+  <header class="apphead">
     <div>
-      <h1>Three Speeds DCA</h1>
-      <p class="muted">Core, Quality and Speculative layers. Buy at the speed the market sets.</p>
+      <div class="eyebrow" id="eyebrow">Monthly investing, by the rules</div>
+      <h1 id="title">iPlouton</h1>
     </div>
-    <p class="small muted" id="saveState"></p>
+    <div style="display:flex;align-items:center;gap:10px"><span class="small muted" id="saveState"></span><button class="iconbtn" data-act="howto" aria-label="How iPlouton works">i</button></div>
   </header>
   <div id="banner"></div>
-  <nav class="tabs" role="tablist" id="tabs"></nav>
   <main id="view"></main>
 </div>
+<nav class="tabbar" id="tabs" role="tablist" aria-label="Sections"></nav>
+<div class="sheetwrap" id="sheet" hidden></div>
 
 <script>
 (function () {
@@ -197,7 +224,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     return null;
   }
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(S)); document.getElementById("saveState").textContent = "Saved in this browser"; }
+    try { localStorage.setItem(KEY, JSON.stringify(S)); document.getElementById("saveState").textContent = "Saved on this device"; }
     catch (e) { storageOK = false; document.getElementById("saveState").textContent = "Not saved: browser storage unavailable. Use Settings > Backup."; }
   }
   S = load() || example();
@@ -391,22 +418,37 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     return { date: d, days: days, text: txt };
   }
 
+
   /* ---------- Views ---------- */
-  var tab = "plan";
-  var TABS = [["plan", "Monthly plan"], ["holdings", "Holdings"], ["portfolio", "Portfolio"], ["history", "History"], ["settings", "Settings"]];
-  var confirmRecord = false;
+  var tab = "plan", sheetId = null, confirmRecord = false;
+  var TABS = [["plan", "Plan"], ["holdings", "Holdings"], ["portfolio", "Portfolio"], ["history", "History"], ["settings", "Settings"]];
+  var TITLES = { plan: "iPlouton", holdings: "Holdings", portfolio: "Portfolio", history: "History", settings: "Settings" };
+  var ICONS = {
+    plan: '<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    holdings: '<path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z"/><path d="M3.5 12l8.5 4.5 8.5-4.5M3.5 16l8.5 4.5 8.5-4.5"/>',
+    portfolio: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5V12h8.5"/>',
+    history: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+    settings: '<path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.2"/><circle cx="8" cy="17" r="2.2"/>'
+  };
+  function icon(n) { return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONS[n] + "</svg>"; }
 
   function renderTabs() {
-    document.getElementById("tabs").innerHTML = TABS.map(function (t) {
-      return '<button role="tab" data-tab="' + t[0] + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + "</button>";
-    }).join("");
+    document.getElementById("tabs").innerHTML = '<div class="in">' + TABS.map(function (t) {
+      return '<button role="tab" data-tab="' + t[0] + '" aria-selected="' + (tab === t[0]) + '">' + icon(t[0]) + "<span>" + t[1] + "</span></button>";
+    }).join("") + "</div>";
   }
+  function li(label, inner, cls) { return '<label class="li' + (cls ? " " + cls : "") + '"><span>' + label + '</span><span class="val">' + inner + "</span></label>"; }
+  function dot(c) { return '<span class="sw" style="background:' + c + '"></span>'; }
+  function layerOf(id) { return LAYERS.filter(function (l) { return l.id === id; })[0]; }
+  function fmtUnits(n) { return n == null ? "–" : n.toLocaleString("en-GB", { maximumFractionDigits: 4 }); }
+
   function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function bannerHtml() {
+    if (S.example) return "";
     var now = new Date(), td = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var due = new Date(td.getFullYear(), td.getMonth(), Math.min(S.investDay, new Date(td.getFullYear(), td.getMonth() + 1, 0).getDate()));
     var bought = S.history.some(function (e) { return e.kind === "buy" && e.date >= ymd(due); });
-    var go = tab !== "plan" ? ' <button class="btn" data-tab="plan">Open monthly plan</button>' : "";
+    var go = tab !== "plan" ? ' <button class="btn" data-tab="plan">Open plan</button>' : "";
     if (td >= due && !bought) {
       var late = Math.round((td - due) / 864e5);
       var wk = (td.getDay() === 0 || td.getDay() === 6) ? " It is a weekend, so buy on the next trading day." : "";
@@ -416,8 +458,12 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     if (until > 0 && until <= 3) return '<div class="note info" style="margin-bottom:16px">Your investing day is in ' + until + (until === 1 ? " day" : " days") + ".</div>";
     return "";
   }
-  function render() {
+
+  function render(keep) {
     document.getElementById("banner").innerHTML = bannerHtml();
+    document.getElementById("title").textContent = TITLES[tab];
+    document.getElementById("eyebrow").textContent = tab === "plan" ? "Monthly investing, by the rules" : "iPlouton";
+    document.title = tab === "plan" ? "iPlouton" : TITLES[tab] + " · iPlouton";
     renderTabs();
     confirmRecord = false;
     var v = document.getElementById("view");
@@ -426,19 +472,18 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     else if (tab === "portfolio") { v.innerHTML = portfolioView(); wireChart(); }
     else if (tab === "history") v.innerHTML = historyView();
     else v.innerHTML = settingsView();
+    if (!keep) window.scrollTo(0, 0);
   }
 
   function planShell() {
-    var banner = S.example ? '<div class="note info">These are example holdings taken from the video (US dollar prices, illustrative share counts). Replace them in Holdings, or <button class="btn" data-act="startfresh">start with an empty portfolio</button>.</div>' : "";
-    return '<div class="stack">' + banner + '<div id="dash"></div>' +
-      '<section class="panel"><div class="step"><div class="n">1</div><div class="stack" style="gap:12px">' +
-      '<div><h2>Contribute on your date</h2><p class="muted small">Same date every month. Never a lump sum.</p></div>' +
-      '<div class="grid">' +
-      '<label class="f">Monthly amount (' + esc(S.cur) + ')<input type="number" min="0" step="any" id="monthly" value="' + S.monthly + '"></label>' +
-      LAYERS.map(function (L) { return '<label class="f"><span><span class="sw" style="background:' + L.color + '"></span>' + L.name + ' %</span><input type="number" min="0" max="100" step="any" data-alloc="' + L.id + '" value="' + S.alloc[L.id] + '"></label>'; }).join("") +
-      '<label class="f">Dry powder balance (' + esc(S.cur) + ')<input type="number" min="0" step="any" id="dry" value="' + S.dry + '"></label>' +
-      '<label class="f">Investing day of the month<input type="number" min="1" max="31" step="1" id="investDay" value="' + S.investDay + '"></label>' +
-      '</div><div id="investNext" class="small"></div><div id="allocNote"></div></div></div></section>' +
+    var banner = S.example ? '<div class="note info">These are example holdings from the video, in US dollars. Replace them in Holdings, or <button class="btn" data-act="startfresh">start with an empty portfolio</button></div>' : "";
+    return '<div class="stack">' + banner + '<div id="hero"></div><div id="dash"></div>' +
+      '<section><div class="sechead"><span class="badge">1</span><div><h2>Set your plan</h2><p class="muted small">Same date every month. Never a lump sum.</p></div></div><div class="list">' +
+      li("Monthly amount", "<i>" + esc(S.cur) + '</i><input type="number" inputmode="decimal" min="0" step="any" id="monthly" value="' + S.monthly + '">') +
+      LAYERS.map(function (L) { return li(dot(L.color) + L.name, '<input type="number" inputmode="decimal" min="0" max="100" step="any" data-alloc="' + L.id + '" value="' + S.alloc[L.id] + '"><i>%</i>'); }).join("") +
+      li("Dry powder balance", "<i>" + esc(S.cur) + '</i><input type="number" inputmode="decimal" min="0" step="any" id="dry" value="' + S.dry + '">') +
+      li("Investing day", '<input type="number" inputmode="numeric" min="1" max="31" step="1" id="investDay" value="' + S.investDay + '"><i>of the month</i>') +
+      '</div><div class="foot" id="investNext"></div><div id="allocNote"></div></section>' +
       '<div id="planOut" class="stack"></div></div>';
   }
 
@@ -465,21 +510,22 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     var rows = LAYERS.map(function (L) {
       return '<tr><td><span class="sw" style="background:' + L.color + '"></span><b>' + L.name + '</b></td><td class="r">' + money(T.byLayer[L.id]) + '</td><td class="r muted">' + pct(share(T.byLayer[L.id], T.all)) + '</td><td class="r">' + (buys[L.id] > 0.004 ? "+" + money(buys[L.id]) : '<span class="muted">–</span>') + '</td><td class="r"><b>' + money(after[L.id]) + '</b></td><td class="r muted">' + pct(share(after[L.id], afterAll)) + "</td></tr>";
     }).join("");
-    return '<section class="panel"><h2 style="margin-bottom:12px">Portfolio dashboard</h2><div class="grid">' +
-      '<div class="tile"><div class="k">Total holding value</div><div class="v">' + money(T.all) + '</div></div>' +
-      '<div class="tile"><div class="k">Return on cost</div><div class="v" style="color:' + cls + '">' + (cost > 0 ? signed(ret) : "–") + '</div></div>' +
+    if (!S.holdings.length) return '<section class="panel"><h2>Your portfolio</h2><p class="muted" style="margin-top:6px">Nothing here yet. Open the Holdings tab and add your first holding to see your totals and returns.</p></section>';
+    return '<section class="panel"><h2 style="margin-bottom:12px">Your portfolio</h2><div class="grid">' +
+      '<div class="tile"><div class="k">Total value</div><div class="v">' + money(T.all) + '</div></div>' +
+      '<div class="tile"><div class="k">Return</div><div class="v" style="color:' + cls + '">' + (cost > 0 ? signed(ret) : "–") + '</div></div>' +
       '<div class="tile"><div class="k">Return %</div><div class="v" style="color:' + cls + '">' + (retPct == null ? "–" : (retPct >= 0 ? "+" : "") + pct(retPct)) + '</div></div>' +
       '<div class="tile"><div class="k">After next investment</div><div class="v">' + money(afterAll) + '</div><div class="small muted">' + (P.total > 0 ? "+" + money(P.total) + " bought" : "no buys") + "</div></div></div>" +
-      '<p class="small muted" style="margin-top:8px">Return = shares × (current price − average cost), against ' + money(cost) + ' paid.' + (missing ? " " + missing + (missing > 1 ? " holdings are" : " holding is") + " left out of the return because average cost or price is missing." : "") + "</p>" +
-      '<div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Sleeve</th><th class="r">Value now</th><th class="r">Share</th><th class="r">Next buy</th><th class="r">Value after buy</th><th class="r">Share</th></tr></thead><tbody>' + rows +
+      '<p class="small muted" style="margin-top:8px">Return = shares × (current price − average cost), against ' + money(cost) + ' paid.' + (missing ? " " + missing + (missing > 1 ? " holdings are" : " holding is") + " left out because average cost or price is missing." : "") + "</p>" +
+      '<div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Sleeve</th><th class="r">Value now</th><th class="r">Share</th><th class="r">Next buy</th><th class="r">Value after</th><th class="r">Share</th></tr></thead><tbody>' + rows +
       '<tr><td><b>Total</b></td><td class="r"><b>' + money(T.all) + '</b></td><td class="r muted">100%</td><td class="r">' + (P.total > 0 ? "+" + money(P.total) : "–") + '</td><td class="r"><b>' + money(afterAll) + '</b></td><td class="r muted">100%</td></tr></tbody></table></div>' +
       '<h3 style="margin:16px 0 8px">Dry powder</h3><div class="grid">' +
-      '<div class="tile"><div class="k">Dry powder now</div><div class="v">' + money(S.dry || 0) + '</div></div>' +
+      '<div class="tile"><div class="k">Now</div><div class="v">' + money(S.dry || 0) + '</div></div>' +
       '<div class="tile"><div class="k">' + (P.dryChange >= 0 ? "Added this round" : "Used this round") + '</div><div class="v" style="color:' + (P.dryChange >= 0 ? "var(--go)" : "var(--slow)") + '">' + (P.dryChange >= 0 ? "+" : "-") + money(Math.abs(P.dryChange)) + '</div></div>' +
-      '<div class="tile"><div class="k">Dry powder after next round</div><div class="v">' + money(dryAfter) + '</div></div>' +
+      '<div class="tile"><div class="k">After next round</div><div class="v">' + money(dryAfter) + '</div></div>' +
       '<div class="tile"><div class="k">Total incl. dry powder, after</div><div class="v">' + money(afterAll + dryAfter) + '</div><div class="small muted">now ' + money(T.all + (S.dry || 0)) + "</div></div></div>" +
       stack(T.byLayer, T.all, "Holdings by sleeve now") + stack(after, afterAll, "Holdings by sleeve after next investment") +
-      '<p class="small muted" style="margin-top:8px">"After" adds the buys from step 2 at today\'s prices. It does not include trims or price moves.</p></section>';
+      '<p class="small muted" style="margin-top:8px">"After" adds this month\'s buys at today\'s prices. It does not include trims or price moves.</p></section>';
   }
 
   function pill(speed) {
@@ -492,91 +538,125 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     var an = document.getElementById("allocNote");
     if (an) {
       var msgs = [];
-      if (Math.abs(sum - 100) > 0.001) msgs.push("Layer percentages add up to " + pct(sum, 1).replace(/\.0%$/, "%") + ", not 100%. The difference goes to dry powder (or you invest more than the monthly amount if it exceeds 100%).");
-      if (S.alloc.spec > S.specCap) msgs.push("Speculative allocation (" + S.alloc.spec + "%) is above the sleeve cap (" + S.specCap + "%). Buys will be limited by the cap.");
-      an.innerHTML = msgs.map(function (m) { return '<div class="note warn" style="margin-top:6px">' + esc(m) + "</div>"; }).join("");
+      if (Math.abs(sum - 100) > 0.001) msgs.push("Your three percentages add up to " + pct(sum, 1).replace(/\.0%$/, "%") + ", not 100%. Any shortfall stays in dry powder.");
+      if (S.alloc.spec > S.specCap) msgs.push("Speculative is set to " + S.alloc.spec + "%, above the " + S.specCap + "% sleeve cap, so its buys will be limited.");
+      an.innerHTML = msgs.map(function (m) { return '<div class="note warn" style="margin-top:8px">' + esc(m) + "</div>"; }).join("");
     }
     var inx = document.getElementById("investNext");
-    if (inx) { var n0 = nextInvest(); inx.innerHTML = "<b>Next investing day:</b> " + esc(n0.text); }
+    if (inx) inx.innerHTML = "<b>Next investing day:</b> " + esc(nextInvest().text);
     var out = document.getElementById("planOut");
     if (!out) return;
     var P = computePlan();
     var dashEl = document.getElementById("dash");
     if (dashEl) dashEl.innerHTML = dashboardHtml(P);
+    var after = (S.dry || 0) + P.dryChange;
+
+    var heroEl = document.getElementById("hero");
+    if (heroEl) heroEl.innerHTML = '<section class="hero"><div class="eyebrow">This month</div><div class="big">' + (P.total > 0 ? "Invest " + money(P.total) : "Nothing to invest") + '</div><div class="sub">' +
+      (P.dryChange >= 0 ? money(P.dryChange) + " goes to dry powder" : money(Math.abs(P.dryChange)) + " comes out of dry powder") + ". Dry powder after: " + money(after) + ".</div>" +
+      P.notes.map(function (n) { return '<div class="hnote">' + esc(n) + "</div>"; }).join("") +
+      '<div class="hbtns"><button class="btn onhero" data-act="record"' + (P.rows.length ? "" : " disabled") + ">" + (confirmRecord ? "Tap again to confirm" : "I made these purchases") + "</button>" + (confirmRecord ? '<button class="btn ghost" data-act="cancelrec">Cancel</button>' : "") + "</div>" +
+      '<div class="hfoot">Recording adds the shares to your holdings and updates dry powder and history.</div></section>';
 
     function money0(n) { return (Math.abs(n % 1) < 0.005) ? S.cur + Math.round(n).toLocaleString("en-GB") : money(n); }
     function joinNames(a) { return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " and " + a[a.length - 1]; }
     function nm(r) { return r.h.ticker || r.h.name; }
-    var slideRows = P.rows.map(function (r) {
-      var label = r.speed === "double" ? "Double down" : r.speed === "half" ? "Half speed" : "Normal";
-      var flags = [];
-      if (r.both) flags.push("also up " + pct(r.up, 0) + " in 30 days");
-      if (r.capped) flags.push("buy limited by sleeve cap");
-      if (!(r.h.price > 0)) flags.push("enter a price");
-      return "<tr><td><b>" + esc(r.h.name || r.h.ticker) + '</b></td><td class="r"><input class="priceinp" type="number" min="0" step="any" aria-label="Price for ' + esc(r.h.name || r.h.ticker) + '" data-id="' + r.h.id + '" data-f="price" value="' + (r.h.price == null ? "" : r.h.price) + '">' + (r.h.priceManual ? '<div class="small muted">manual · <a href="#" data-unmanual="' + r.h.id + '">use fetched</a></div>' : "") + '</td><td class="r">' + (r.h.high > 0 ? money(r.h.high) : "–") + '</td><td class="r"><b>' + (r.off == null ? "–" : pct(Math.max(0, r.off), 0)) + '</b></td><td class="r num" style="' + (r.up != null && r.up >= S.halfPct ? "color:var(--slow);font-weight:700" : "") + '">' + (r.up == null ? "–" : (r.up >= 0 ? "+" : "") + pct(r.up, 1)) + '</td><td class="muted">' + (r.layer === "spec" ? "Sleeve" : r.trig + "%") + '</td><td><span class="verdict ' + r.speed + '">' + label + "&nbsp; " + money0(S.monthly * r.mult) + "</span>" + (flags.length ? '<div class="small muted">' + esc(flags.join(" · ")) + "</div>" : "") + '</td><td class="r"><b>' + money(r.amt) + "</b></td></tr>";
+    function fmtStamp(v) { if (!v) return "not recorded"; var d = new Date(v); if (isNaN(d)) return "not recorded"; return String(v).length <= 10 ? d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : d.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); }
+    var refreshed = refreshedAt ? refreshedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : null;
+
+    var groups = LAYERS.map(function (L) {
+      var rs = P.rows.filter(function (r) { return r.layer === L.id; });
+      if (!rs.length) return "";
+      return '<div class="grouphead">' + dot(L.color) + L.name + " · " + (S.alloc[L.id] || 0) + "% = " + money0(S.monthly * (S.alloc[L.id] || 0) / 100) + '</div><div class="list">' +
+        rs.map(function (r) {
+          var label = r.speed === "double" ? "Double down" : r.speed === "half" ? "Half speed" : "Normal";
+          var bits = [];
+          bits.push(r.off == null ? "no 52-week high yet" : pct(Math.max(0, r.off), 0) + " below the high (double down at " + r.trig + "%)");
+          if (r.up != null) bits.push((r.up >= 0 ? "+" : "") + pct(r.up, 1) + " in 30 days");
+          if (r.both) bits.push("also up " + pct(r.up, 0) + ", double down takes priority");
+          if (r.capped) bits.push("limited by the sleeve cap");
+          if (!(r.h.price > 0)) bits.push("enter a price");
+          return '<div class="li hrow" data-open="' + r.h.id + '" role="button" tabindex="0"><div class="hmain">' +
+            '<div class="hl1"><b>' + esc(r.h.name || r.h.ticker || "New holding") + "</b>" + (r.h.ticker && r.h.name ? '<span class="muted small">' + esc(r.h.ticker) + "</span>" : "") + '<span class="pill ' + r.speed + '">' + label + " · " + Math.round(r.mult * 100) + "%</span></div>" +
+            '<div class="hl2"><span class="pin"><span>' + esc(S.cur) + '</span><input type="number" inputmode="decimal" class="priceinp" min="0" step="any" aria-label="Price for ' + esc(r.h.name || r.h.ticker) + '" data-id="' + r.h.id + '" data-f="price" value="' + (r.h.price == null ? "" : r.h.price) + '"></span>' +
+            '<span class="muted small">52-week high ' + (r.h.high > 0 ? money(r.h.high) : "–") + "</span></div>" +
+            '<div class="small muted">' + esc(bits.join(" · ")) + (r.h.priceManual ? ' · manual price <a href="#" data-unmanual="' + r.h.id + '">use fetched</a>' : "") + "</div></div>" +
+            '<div class="hbuy"><span class="small muted">Buy</span><b>' + money(r.amt) + '</b><span class="small muted">' + fmtUnits(r.units) + " units</span></div></div>";
+        }).join("") + "</div>";
     }).join("");
+
     var halfNames = P.rows.filter(function (r) { return r.up != null && r.up >= S.halfPct; }).map(nm);
     var noP30 = P.rows.filter(function (r) { return r.up == null; }).length;
     var halfText = halfNames.length ? "<b>Half-speed check:</b> " + esc(joinNames(halfNames)) + " up " + S.halfPct + "% or more in 30 days" : "<b>Half-speed check:</b> none up " + S.halfPct + "% in 30 days";
     if (noP30) halfText += ' <span class="muted">(' + noP30 + " without a 30-day price)</span>";
     var nearNames = P.rows.filter(function (r) { return r.off != null && Math.abs(r.off - r.trig) <= 3; }).map(nm);
-    var nearText = nearNames.length ? joinNames(nearNames) + (nearNames.length > 1 ? " are" : " is") + " close to the line. Re-check on your date." : "";
-    function fmtStamp(v) { if (!v) return "not recorded"; var d = new Date(v); if (isNaN(d)) return "not recorded"; return String(v).length <= 10 ? d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : d.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); }
-    var refreshed = refreshedAt ? refreshedAt.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : null;
-    var nd = nextInvest(), isToday = nd.days === 0;
+    var nearText = nearNames.length ? joinNames(nearNames) + (nearNames.length > 1 ? " are" : " is") + " close to the line. Re-check on your investing day." : "";
 
-    var trimHtml = P.trims.length ? '<div class="tablewrap"><table><thead><tr><th>Holding</th><th class="r">Gain on cost</th><th>Ladder rung</th><th class="r">Sell</th><th class="r">Proceeds to dry powder</th><th></th></tr></thead><tbody>' +
-      P.trims.map(function (t) {
-        return "<tr><td><b>" + esc(t.h.ticker || t.h.name) + '</b></td><td class="r">+' + pct(t.gain, 0) + "</td><td>+" + (50 * t.rung) + "% rung" + (t.more ? ' <span class="muted small">(' + t.more + " more rung" + (t.more > 1 ? "s" : "") + " pending after this)</span>" : "") + '</td><td class="r">' + t.pct + "% = " + t.shares.toLocaleString("en-GB", { maximumFractionDigits: 4 }) + ' sh</td><td class="r">' + money(t.proceeds) + '</td><td class="r"><button class="btn" data-trim="' + t.h.id + '">Record trim</button></td></tr>';
-      }).join("") + "</tbody></table></div>" : '<p class="muted">No holding has reached its next trim rung. Rungs are +50%, +100%, +150% (trim 10%, 20%, 30%), then the cycle repeats at +200%, +250%, +300%.</p>';
+    var pricesHtml = '<section><div class="sechead"><span class="badge">2</span><div><h2>Check the prices</h2><p class="muted small">Each holding is compared with its 52-week high. Tap a holding to edit it, or type over a price to override it.</p></div>' +
+      '<div style="text-align:right;flex:0 0 auto"><button class="btn primary" data-act="refresh"' + (refreshing ? " disabled" : "") + ">" + (refreshing ? "Refreshing..." : "Refresh") + '</button></div></div>' +
+      '<div class="small muted" style="margin:0 8px 6px">' + (refreshed ? "Refreshed " + refreshed : "Not refreshed yet") + (refreshMsg ? " · " + esc(refreshMsg) : "") + "</div>" +
+      (groups || '<div class="list"><div class="li muted">No holdings yet. Open the Holdings tab and tap Add holding.</div></div>') +
+      '<div class="stack" style="gap:10px;margin-top:12px"><div class="halfbox">' + halfText + "</div>" + (nearText ? '<p class="small muted" style="font-style:italic">' + esc(nearText) + "</p>" : "") +
+      '<p class="small muted">Prices last updated: ' + esc(fmtStamp(S.pricesAsOf)) + ". Refresh pulls the price and 52-week high from Finnhub for each ticker. The 30-day price is fetched too where your plan allows it, otherwise enter it in the holding.</p>" +
+      '<details ' + (pasteMsgText ? "open" : "") + '><summary class="small">Update prices by pasting</summary><div class="stack" style="gap:8px;margin-top:8px"><p class="small muted">One holding per line: ticker, price, 52-week high, price 30 days ago. The last two are optional. Example: <code>NVDA 162.85 239.24 150</code></p><textarea id="paste" spellcheck="false" placeholder="NVDA 162.85 239.24 150"></textarea><div class="row"><button class="btn" data-act="applypaste">Apply prices</button><span class="small muted" id="pasteMsg">' + esc(pasteMsgText) + "</span></div></div></details></div></section>";
 
-    var sleeveOver = P.sleeveAfter > S.specCap + 0.01;
-    var after = (S.dry || 0) + P.dryChange;
+    var trimHtml = '<section><div class="sechead"><span class="badge">3</span><div><h2>Trim the winners</h2><p class="muted small">Trimming is insurance, not a verdict on the thesis. Proceeds go back to dry powder. Never sell 100% for risk management.</p></div></div>' +
+      (P.trims.length ? '<div class="list">' + P.trims.map(function (t) {
+        return '<div class="li"><div style="min-width:0"><b>' + esc(t.h.name || t.h.ticker) + '</b><div class="small muted">Up ' + pct(t.gain, 0) + " on cost · +" + (50 * t.rung) + "% rung" + (t.more ? " (" + t.more + " more rung" + (t.more > 1 ? "s" : "") + " after this)" : "") + "</div></div>" +
+          '<div style="text-align:right;flex:0 0 auto"><div><b>Sell ' + t.pct + "%</b> · " + fmtUnits(t.shares) + ' sh</div><div class="small muted">' + money(t.proceeds) + ' to dry powder</div><button class="btn" style="margin-top:6px" data-trim="' + t.h.id + '">Record trim</button></div></div>';
+      }).join("") + "</div>" : '<div class="list"><div class="li muted small">Nothing to trim right now. Trims happen at +50%, +100% and +150% on your average cost (10%, 20%, 30%), then the cycle repeats at +200%, +250% and +300%.</div></div>') + "</section>";
 
-    out.innerHTML =
-      '<section class="panel"><div class="step"><div class="n">2</div><div class="stack" style="gap:12px;min-width:0">' +
-      '<div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0"><h2>Price vs. the 52-week high</h2><p class="muted small">Each holding is checked against its 52-week high. Change (%) is the move since the price 30 days ago. Verdict amounts are for your ' + money0(S.monthly) + ' month: normal 50%, double down 150%, half speed 25%.</p></div>' +
-      '<div style="text-align:right;flex:0 0 auto;max-width:220px"><button class="btn primary" data-act="refresh"' + (refreshing ? " disabled" : "") + '>' + (refreshing ? "Refreshing..." : "Refresh") + '</button><div class="small muted" style="margin-top:4px">' + (refreshed ? "Refreshed " + refreshed : "Not refreshed yet") + (refreshMsg ? "<br>" + esc(refreshMsg) : "") + "</div></div></div>" +
-      (isToday ? '<div class="note" style="background:var(--go-bg);color:var(--go)"><b>Today is your investing day.</b> Refresh, then act on the verdicts below.</div>' : "") +
-      '<div class="tablewrap slide"><table class="slidetbl"><thead><tr><th>Holding</th><th class="r">Price</th><th class="r">52-wk high</th><th class="r">Off high</th><th class="r" title="Price now against the price 30 days ago">Change (%)</th><th>Rule</th><th>Verdict</th><th class="r">Your buy</th></tr></thead><tbody>' + (slideRows || '<tr><td colspan="8" class="muted">Add holdings in the Holdings tab.</td></tr>') + "</tbody></table></div>" +
-      '<div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px"><div class="halfbox">' + halfText + "</div>" + (nearText ? '<p class="small muted" style="font-style:italic;max-width:320px">' + esc(nearText) + "</p>" : "") + "</div>" +
-      '<p class="small muted">Prices last updated: ' + esc(fmtStamp(S.pricesAsOf)) + ". Refresh pulls the price and 52-week high from Finnhub for each ticker. Type over any price to override it (it is kept when you Refresh). The 30-day price is not fetched, so enter it in Holdings. Double-down rule: " + S.trig.quality + "% below the 52-week high for stocks, " + S.trig.core + "% for the index core.</p>" +
-      '<details ' + (pasteMsgText ? "open" : "") + '><summary class="small" style="cursor:pointer">Update prices by pasting</summary><div class="stack" style="gap:8px;margin-top:8px"><p class="small muted">One holding per line: ticker, price, 52-week high, price 30 days ago. The last two are optional. Example: <code>NVDA 162.85 239.24 150</code></p><textarea id="paste" spellcheck="false" placeholder="NVDA 162.85 239.24 150"></textarea><div class="row"><button class="btn" data-act="applypaste">Apply prices</button><span class="small muted" id="pasteMsg">' + esc(pasteMsgText) + '</span></div></div></details>' +
-      "</div></div></section>" +
+    var sleeveOver = P.sleeveAfter > S.specCap + 0.01, already = P.T.byLayer.spec > 0 && P.sleeveNow > S.specCap;
+    var sleeveHtml = '<section><div class="sechead"><span class="badge">4</span><div><h2>Speculative sleeve</h2><p class="muted small">Speculative holdings together stay under the cap.</p></div></div><div class="panel"><div class="grid">' +
+      '<div class="tile"><div class="k">Now</div><div class="v">' + pct(P.sleeveNow) + '</div></div><div class="tile"><div class="k">After buys</div><div class="v">' + pct(P.sleeveAfter) + '</div></div><div class="tile"><div class="k">Cap</div><div class="v">' + pct(S.specCap, 0) + "</div></div></div>" +
+      (already ? '<div class="note warn" style="margin-top:10px">The sleeve is already above its cap, so no new speculative money is added until it falls back under ' + S.specCap + "%.</div>" : "") +
+      (sleeveOver && !already ? '<div class="note warn" style="margin-top:10px">The sleeve would end above the cap after this month.</div>' : "") + "</div></section>";
 
-      '<section class="panel"><div class="step"><div class="n">3</div><div class="stack" style="gap:12px;min-width:0"><div><h2>This month</h2><p class="muted small">Normal invests 50% of a holding\'s share, double down 150%, half speed 25%. The rest sits in dry powder (T-bills or a money market fund).</p></div>' +
-      '<div class="grid">' +
-      '<div class="tile"><div class="k">Invest now</div><div class="v">' + money(P.total) + "</div></div>" +
-      '<div class="tile"><div class="k">' + (P.dryChange >= 0 ? "Add to dry powder" : "Take from dry powder") + '</div><div class="v">' + money(Math.abs(P.dryChange)) + "</div></div>" +
-      '<div class="tile"><div class="k">Dry powder after</div><div class="v">' + money(after) + "</div></div>" +
-      '<div class="tile"><div class="k">Monthly amount</div><div class="v">' + money(S.monthly) + "</div></div></div>" +
-      P.notes.map(function (n) { return '<div class="note warn">' + esc(n) + "</div>"; }).join("") +
-      '<div class="row"><button class="btn primary" data-act="record" ' + (P.rows.length ? "" : "disabled") + ">" + (confirmRecord ? "Confirm: add these buys to holdings" : "I made these purchases") + "</button>" +
-      (confirmRecord ? '<button class="btn" data-act="cancelrec">Cancel</button>' : "") +
-      '<span class="muted small">Updates shares, average cost, dry powder and history.</span></div></div></div></section>' +
-
-      '<section class="panel"><div class="step"><div class="n">4</div><div class="stack" style="gap:12px;min-width:0"><div><h2>Trim ladder</h2><p class="muted small">Trimming is insurance, not a verdict on the thesis. Never sell 100% for risk management. Proceeds go back to dry powder and are redeployed over 12 to 24 months.</p></div>' + trimHtml + "</div></div></section>" +
-
-      '<section class="panel"><div class="step"><div class="n">5</div><div class="stack" style="gap:12px;min-width:0"><div><h2>Speculative sleeve check</h2></div>' +
-      '<div class="grid"><div class="tile"><div class="k">Sleeve now</div><div class="v">' + pct(P.sleeveNow) + '</div></div><div class="tile"><div class="k">Sleeve after buys</div><div class="v">' + pct(P.sleeveAfter) + '</div></div><div class="tile"><div class="k">Cap</div><div class="v">' + pct(S.specCap, 0) + "</div></div></div>" +
-      (P.T.byLayer.spec > 0 && P.sleeveNow > S.specCap ? '<div class="note warn">The sleeve is already above its cap. No new speculative money is added until it falls back under ' + S.specCap + "%.</div>" : "") +
-      (sleeveOver && !(P.T.byLayer.spec > 0 && P.sleeveNow > S.specCap) ? '<div class="note warn">The sleeve would end above the cap after this month.</div>' : "") + "</div></div></section>";
+    out.innerHTML = pricesHtml + trimHtml + sleeveHtml;
   }
 
+  /* Holdings tab */
   function holdingsView() {
-    return '<div class="stack"><div class="note info">Type values and press Tab or Enter. Everything saves automatically. Weight splits a layer\'s money between its holdings (1 = equal). Last trim rung is the highest +50% step you have already trimmed at (0 if none).</div>' +
-      LAYERS.map(function (L) {
-        var hs = S.holdings.filter(function (h) { return h.layer === L.id; });
-        return '<section class="panel"><div class="layerhead"><div><h3><span class="sw" style="background:' + L.color + '"></span>' + L.name + '</h3><span class="muted small">' + L.sub + '</span></div><button class="btn" data-add="' + L.id + '">Add holding</button></div>' +
-          (hs.length ? '<div class="tablewrap"><table class="holdtbl"><thead><tr><th>Name</th><th>Ticker</th><th>Weight</th><th>Shares</th><th>Avg cost</th><th>Price</th><th>52-wk high</th><th>Price 30d ago</th><th>Last trim rung</th><th title="Some London-listed funds are quoted in pence. Choose Pence to divide fetched prices by 100.">Quoted in</th><th></th></tr></thead><tbody>' +
-            hs.map(function (h) {
-              function inp(f, w, step) { return '<td><input style="min-width:' + w + 'px" type="number" step="any" min="0" data-id="' + h.id + '" data-f="' + f + '" value="' + (h[f] == null ? "" : h[f]) + '"></td>'; }
-              return '<tr><td><input style="min-width:130px" data-id="' + h.id + '" data-f="name" value="' + esc(h.name) + '"></td><td><input style="min-width:70px" data-id="' + h.id + '" data-f="ticker" value="' + esc(h.ticker) + '"></td>' +
-                inp("w", 60) + inp("shares", 80) + inp("cost", 80) + inp("price", 80) + inp("high", 80) + inp("p30", 80) + inp("rung", 60) + '<td><select data-id="' + h.id + '" data-f="pence"><option value="main"' + (h.pence ? "" : " selected") + '>Main currency</option><option value="pence"' + (h.pence ? " selected" : "") + '>Pence</option></select></td>' +
-                '<td><button class="btn danger" data-del="' + h.id + '" aria-label="Remove ' + esc(h.name) + '">Remove</button></td></tr>';
-            }).join("") + "</tbody></table></div>" : '<p class="muted">Nothing here yet.</p>') + "</section>";
-      }).join("") + "</div>";
+    return '<div class="stack">' + LAYERS.map(function (L) {
+      var hs = S.holdings.filter(function (h) { return h.layer === L.id; });
+      return '<section><div class="grouphead" style="margin-top:0">' + dot(L.color) + L.name + ' <span style="text-transform:none;letter-spacing:0;font-weight:400">· ' + L.sub + '</span></div><div class="list">' +
+        hs.map(function (h) {
+          var v = (h.shares || 0) * (h.price || 0);
+          return '<div class="li hrow" style="align-items:center" data-open="' + h.id + '" role="button" tabindex="0"><div class="hmain"><b>' + esc(h.name || h.ticker || "New holding") + '</b><span class="small muted">' + esc(h.ticker || "no ticker") + " · " + fmtUnits(h.shares || 0) + " sh" + (h.cost > 0 ? " · avg " + money(h.cost) : "") + '</span></div><div class="hbuy"><b style="font-size:16px">' + money(v) + '</b><span class="small muted">' + (h.price > 0 ? money(h.price) : "no price") + '</span></div><span class="chev">›</span></div>';
+        }).join("") + (hs.length ? "" : '<div class="li muted small">Nothing here yet. Tap Add holding to start.</div>') +
+        '<button class="li add" data-add="' + L.id + '">+ Add holding</button></div></section>';
+    }).join("") + "</div>";
   }
+
+  /* Bottom sheets */
+  function sheetFor(h) {
+    function numIn(f, ph) { return '<input type="number" inputmode="decimal" step="any" min="0" placeholder="' + (ph || "") + '" data-id="' + h.id + '" data-f="' + f + '" value="' + (h[f] == null ? "" : h[f]) + '">'; }
+    function txtIn(f, ph) { return '<input placeholder="' + ph + '" data-id="' + h.id + '" data-f="' + f + '" value="' + esc(h[f]) + '">'; }
+    return '<div class="shead"><h2>' + esc(h.name || h.ticker || "New holding") + '</h2><button class="link" data-act="closesheet">Done</button></div>' +
+      '<div class="list">' +
+      li("Name", txtIn("name", "e.g. NVIDIA")) + li("Ticker", txtIn("ticker", "e.g. NVDA")) +
+      li("Sleeve", '<select data-id="' + h.id + '" data-f="layer">' + LAYERS.map(function (L) { return '<option value="' + L.id + '"' + (h.layer === L.id ? " selected" : "") + ">" + L.name + "</option>"; }).join("") + "</select>") +
+      li("Weight in sleeve", numIn("w", "1")) + "</div>" +
+      '<div class="foot">Weight splits a sleeve\'s monthly money between its holdings. Leave all at 1 to split equally.</div>' +
+      '<div class="list" style="margin-top:16px">' + li("Shares held", numIn("shares", "0")) + li("Average cost", "<i>" + esc(S.cur) + "</i>" + numIn("cost", "0.00")) + li("Last trim rung", numIn("rung", "0")) + "</div>" +
+      '<div class="foot">Last trim rung is the highest +50% step you have already trimmed at, or 0 if none.</div>' +
+      '<div class="list" style="margin-top:16px">' + li("Price", "<i>" + esc(S.cur) + "</i>" + numIn("price", "0.00")) + li("52-week high", "<i>" + esc(S.cur) + "</i>" + numIn("high", "0.00")) + li("Price 30 days ago", "<i>" + esc(S.cur) + "</i>" + numIn("p30", "optional")) +
+      li("Quoted in", '<select data-id="' + h.id + '" data-f="pence"><option value="main"' + (h.pence ? "" : " selected") + '>Main currency</option><option value="pence"' + (h.pence ? " selected" : "") + ">Pence</option></select>") + "</div>" +
+      '<div class="foot">Choose Pence for London-listed funds quoted in pence, so fetched prices are divided by 100.</div>' +
+      '<button class="btn danger block" data-del="' + h.id + '">Remove holding</button>';
+  }
+  function howtoHtml() {
+    return '<div class="shead"><h2>How iPlouton works</h2><button class="link" data-act="closesheet">Done</button></div><div class="panel how">' +
+      "<h3>Three layers</h3><p>Core is an index fund, the steady base (40 to 50%). Quality growth is companies with real revenue and scale. Speculative is high potential and high risk, kept under a cap (5% by default).</p>" +
+      "<h3>Three speeds</h3><p>Each month you invest at the speed the market sets, per holding. <b>Normal</b>: invest 50% of its share and keep 50% as dry powder. <b>Double down</b>: when it is 20% or more below its 52-week high (10% for an index), invest 150% using dry powder. <b>Half speed</b>: when it is up 20% or more in 30 days, invest 25% so you do not chase rallies.</p>" +
+      "<h3>Dry powder</h3><p>The money you hold back, in T-bills or a money market fund. Double-down months draw it down, quiet months refill it.</p>" +
+      "<h3>Trim ladder</h3><p>When a holding is up 50% on your average cost, trim 10%. At +100% trim 20%, at +150% trim 30%, then the cycle repeats. Proceeds return to dry powder. Fully sell only if the reason you bought it breaks.</p>" +
+      "<h3>Each month</h3><p>1. Set your plan. 2. Refresh and check the prices. 3. Make the purchases and tap I made these purchases. 4. Record any trims. 5. Check the speculative sleeve.</p>" +
+      "<p class=\"small muted\">This is a calculator for your own rules, not financial advice.</p></div>";
+  }
+  function showSheet(html) { var el = document.getElementById("sheet"); el.innerHTML = '<div class="scrim" data-act="closesheet"></div><div class="sheet" role="dialog" aria-modal="true">' + html + "</div>"; el.hidden = false; }
+  function openSheet(id) { var h = S.holdings.filter(function (x) { return x.id === id; })[0]; if (!h) return; sheetId = id; showSheet(sheetFor(h)); }
+  function closeSheet() { var el = document.getElementById("sheet"); sheetId = null; el.hidden = true; el.innerHTML = ""; render(true); }
 
   function chartHtml() {
     var pts = (S.snaps || []).slice();
@@ -651,16 +731,19 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
   }
 
   function settingsView() {
-    return '<div class="stack"><section class="panel"><h2 style="margin-bottom:12px">Rules</h2><div class="grid">' +
-      '<label class="f">Currency symbol<input id="cur" value="' + esc(S.cur) + '" maxlength="3"></label>' +
-      '<label class="f">Speculative sleeve cap (% of portfolio)<input type="number" min="0" max="100" step="any" id="specCap" value="' + S.specCap + '"></label>' +
-      '<label class="f">Half speed: up at least (%) in 30 days<input type="number" min="0" step="any" id="halfPct" value="' + S.halfPct + '"></label>' +
-      LAYERS.map(function (L) { return '<label class="f">Double down: ' + L.name + ' below 52-wk high (%)<input type="number" min="0" step="any" data-trig="' + L.id + '" value="' + S.trig[L.id] + '"></label>'; }).join("") +
-      '</div><p class="muted small" style="margin-top:10px">The video uses 20% for individual stocks and 10% for the S&amp;P 500, because an index does not fall like a single stock. Trim rungs are fixed at +50%, +100%, +150% with 10%, 20%, 30%, repeating.</p></section>' +
-      '<section class="panel"><h2 style="margin-bottom:6px">Live prices (Finnhub)</h2><p class="muted small" style="margin-bottom:10px">Paste your Finnhub API key. It is stored only in this browser, separately from your portfolio, and is not included in the backup text. Each holding needs a ticker in the Holdings tab.</p><label class="f">API key<input type="password" id="finnhubKey" autocomplete="off" value="' + esc(getKey()) + '"></label><p class="small muted" id="keyMsg" style="margin-top:6px"></p></section>' +
-      '<section class="panel"><h2 style="margin-bottom:6px">Backup</h2><p class="muted small" style="margin-bottom:10px">Your data lives only in this browser. Copy the text below somewhere safe, and paste it back here to restore it on another device.</p>' +
-      '<textarea id="backup" spellcheck="false">' + esc(JSON.stringify(S)) + '</textarea><div class="row" style="margin-top:10px"><button class="btn" data-act="copy">Copy</button><button class="btn" data-act="import">Restore from text</button><span class="small muted" id="backupMsg"></span></div></section>' +
-      '<section class="panel"><h2 style="margin-bottom:6px">Reset</h2><div class="row"><button class="btn" data-act="loadex">Load the video examples</button><button class="btn danger" data-act="startfresh">Empty everything</button></div></section></div>';
+    return '<div class="stack">' +
+      '<section><div class="grouphead" style="margin-top:0">Rules</div><div class="list">' +
+      li("Currency symbol", '<input id="cur" value="' + esc(S.cur) + '" maxlength="3" style="width:60px">') +
+      li("Speculative sleeve cap", '<input type="number" inputmode="decimal" min="0" max="100" step="any" id="specCap" value="' + S.specCap + '"><i>%</i>') +
+      li("Half speed when up", '<input type="number" inputmode="decimal" min="0" step="any" id="halfPct" value="' + S.halfPct + '"><i>% in 30 days</i>') +
+      LAYERS.map(function (L) { return li("Double down: " + dot(L.color) + L.name, '<input type="number" inputmode="decimal" min="0" step="any" data-trig="' + L.id + '" value="' + S.trig[L.id] + '"><i>% below high</i>'); }).join("") +
+      '</div><div class="foot">The video uses 20% for individual stocks and 10% for the S&amp;P 500, because an index does not fall like a single stock. Trim rungs are fixed at +50%, +100% and +150% (10%, 20%, 30%), repeating.</div></section>' +
+      '<section><div class="grouphead">Live prices (Finnhub)</div><div class="list">' + li("API key", '<input type="password" id="finnhubKey" autocomplete="off" placeholder="Paste key" value="' + esc(getKey()) + '" style="width:180px">') +
+      '</div><div class="foot" id="keyMsg">Stored only in this browser, separately from your portfolio, and not included in the backup. Each holding needs a ticker.</div></section>' +
+      '<section><div class="grouphead">Help</div><div class="list"><button class="li add" data-act="howto" style="border-top:0">How iPlouton works</button></div></section>' +
+      '<section><div class="grouphead">Backup</div><div class="panel"><p class="muted small" style="margin-bottom:10px">Your data lives only in this browser. Copy the text below somewhere safe, and paste it back here to restore it on another device.</p>' +
+      '<textarea id="backup" spellcheck="false">' + esc(JSON.stringify(S)) + '</textarea><div class="row" style="margin-top:10px"><button class="btn" data-act="copy">Copy</button><button class="btn" data-act="import">Restore from text</button><span class="small muted" id="backupMsg"></span></div></div></section>' +
+      '<section><div class="grouphead">Reset</div><div class="row"><button class="btn" data-act="loadex">Load the video examples</button><button class="btn danger" data-act="startfresh">Empty everything</button></div></section></div>';
   }
 
   /* ---------- Events ---------- */
@@ -668,14 +751,16 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     var b = e.target.closest("button");
     if (!b) return;
     if (b.dataset.tab) { tab = b.dataset.tab; render(); return; }
-    if (b.dataset.add) { S.holdings.push({ id: uid(), layer: b.dataset.add, name: "", ticker: "", w: 1, shares: 0, cost: null, price: null, high: null, p30: null, rung: 0 }); S.example = false; save(); render(); return; }
-    if (b.dataset.del) { S.holdings = S.holdings.filter(function (h) { return h.id !== b.dataset.del; }); save(); render(); return; }
+    if (b.dataset.add) { var nh = { id: uid(), layer: b.dataset.add, name: "", ticker: "", w: 1, shares: 0, cost: null, price: null, high: null, p30: null, rung: 0 }; S.holdings.push(nh); S.example = false; save(); openSheet(nh.id); return; }
+    if (b.dataset.del) { S.holdings = S.holdings.filter(function (h) { return h.id !== b.dataset.del; }); save(); closeSheet(); return; }
     if (b.dataset.trim) { recordTrim(b.dataset.trim); renderPlanOut(); return; }
     var a = b.dataset.act;
     if (a === "record") {
       if (!confirmRecord) { confirmRecord = true; renderPlanOut(); return; }
       recordMonth(); S.example = false; confirmRecord = false; render(); return;
     }
+    if (a === "closesheet") { closeSheet(); return; }
+    if (a === "howto") { showSheet(howtoHtml()); return; }
     if (a === "snap") { snap(); save(); render(); return; }
     if (a === "refresh") { doRefresh(); return; }
     if (a === "applypaste") {
@@ -732,6 +817,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       if (!h) return;
       var f = t.dataset.f;
       if (f === "pence") { h.pence = t.value === "pence"; save(); return; }
+      if (f === "layer") { h.layer = t.value; save(); return; }
       h[f] = (f === "name" || f === "ticker") ? t.value : (f === "w" ? (num(t.value) || 1) : f === "rung" ? Math.max(0, Math.floor(num(t.value) || 0)) : num(t.value));
       if (f === "shares" && h.shares == null) h.shares = 0;
       if (f === "price" || f === "high" || f === "p30") S.pricesAsOf = new Date().toISOString();
@@ -740,6 +826,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       if (f === "p30") h.p30Manual = true;
       S.example = false; save();
       if (tab === "plan") renderPlanOut();
+      var sh = document.querySelector(".shead h2"); if (sh && sheetId === h.id) sh.textContent = h.name || h.ticker || "New holding";
       return;
     }
     if (t.id === "investDay") { S.investDay = Math.min(31, Math.max(1, parseInt(t.value, 10) || 1)); save(); renderPlanOut(); return; }
@@ -762,8 +849,17 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     else if (t.dataset.alloc) { S.alloc[t.dataset.alloc] = Math.max(0, num(t.value) || 0); save(); renderPlanOut(); }
   });
 
+  document.addEventListener("click", function (e) {
+    var row = e.target.closest("[data-open]");
+    if (row && !e.target.closest("input,select,a,button,label")) openSheet(row.dataset.open);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !document.getElementById("sheet").hidden) closeSheet();
+    if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[data-open]")) { e.preventDefault(); openSheet(e.target.dataset.open); }
+  });
+
   render();
-  if (storageOK) document.getElementById("saveState").textContent = S.example ? "Showing example data" : "Saved in this browser";
+  if (storageOK) document.getElementById("saveState").textContent = S.example ? "Example data" : "Saved on this device";
   else document.getElementById("saveState").textContent = "Browser storage unavailable. Use Settings > Backup.";
 })();
 </script>
