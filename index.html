@@ -173,8 +173,13 @@ input.priceinp { width: 104px; text-align: right; padding: 6px 8px; font-size: 1
 
 /* responsive layout: adapts to screen size and input type */
 @media (max-width: 760px) { .swipehint { display: block; } }
+.only-wide { display: none; }
+.holdtbl input { padding: 6px 8px; font-size: 14px; background: var(--fill); }
+.holdtbl td { padding: 6px 4px; }
+.layerhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.viewlink { text-align: center; margin-top: 24px; }
 @media (min-width: 700px) { .wrap { max-width: 760px; } nav.tabbar .in { max-width: 760px; } }
-@media (min-width: 1000px) {
+@media (min-width: 900px) {
   .wrap { max-width: 1080px; }
   body { padding-block: 84px 40px; }
   nav.tabbar { top: 0; bottom: auto; border-top: 0; border-bottom: 1px solid var(--line); padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: 8px; }
@@ -183,7 +188,8 @@ input.priceinp { width: 104px; text-align: right; padding: 6px 8px; font-size: 1
   nav.tabbar button[aria-selected="true"] { background: var(--tint); }
   .plan { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
   .plan > #hero, .plan > #dash, .plan > #planOut, .plan > .note { grid-column: 1 / -1; }
-  .cols3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+  .only-wide { display: block; }
+  .only-narrow { display: none; }
   .sheet { top: 50%; bottom: auto; transform: translateY(-50%); max-width: 560px; max-height: 86%; border-radius: 20px; padding-bottom: 20px; }
   table.slidetbl { min-width: 0; }
 }
@@ -214,6 +220,7 @@ input.priceinp { width: 104px; text-align: right; padding: 6px 8px; font-size: 1
   </header>
   <div id="banner"></div>
   <main id="view"></main>
+  <div class="viewlink"><button class="link" id="viewToggle" data-act="layout" hidden></button></div>
 </div>
 <nav class="tabbar" id="tabs" role="tablist" aria-label="Sections"></nav>
 <div class="sheetwrap" id="sheet" hidden></div>
@@ -507,6 +514,18 @@ input.priceinp { width: 104px; text-align: right; padding: 6px 8px; font-size: 1
     return "";
   }
 
+  var LAYK = "iplouton-layout";
+  function layoutMode() { try { return localStorage.getItem(LAYK) || ""; } catch (e) { return ""; } }
+  function applyLayout() {
+    var m = layoutMode(), meta = document.querySelector('meta[name="viewport"]');
+    if (meta) meta.setAttribute("content", m === "desktop" ? "width=1100" : "width=device-width, initial-scale=1, viewport-fit=cover");
+    var b = document.getElementById("viewToggle");
+    if (!b) return;
+    if (m === "desktop") { b.textContent = "View mobile site"; b.hidden = false; }
+    else if (window.innerWidth < 900) { b.textContent = "View desktop site"; b.hidden = false; }
+    else b.hidden = true;
+  }
+  window.addEventListener("resize", applyLayout);
   function render(keep) {
     document.getElementById("banner").innerHTML = bannerHtml();
     document.getElementById("title").textContent = TITLES[tab];
@@ -659,7 +678,10 @@ input.priceinp { width: 104px; text-align: right; padding: 6px 8px; font-size: 1
 
   /* Holdings tab */
   function holdingsView() {
-    return '<div class="stack cols3">' + LAYERS.map(function (L) {
+    return '<div class="only-narrow">' + holdingsList() + '</div><div class="only-wide">' + holdingsTable() + "</div>";
+  }
+  function holdingsList() {
+    return '<div class="stack">' + LAYERS.map(function (L) {
       var hs = S.holdings.filter(function (h) { return h.layer === L.id; });
       return '<section><div class="grouphead" style="margin-top:0">' + dot(L.color) + L.name + ' <span style="text-transform:none;letter-spacing:0;font-weight:400">· ' + L.sub + '</span></div><div class="list">' +
         hs.map(function (h) {
@@ -667,6 +689,22 @@ input.priceinp { width: 104px; text-align: right; padding: 6px 8px; font-size: 1
           return '<div class="li hrow" style="align-items:center" data-open="' + h.id + '" role="button" tabindex="0"><div class="hmain"><b>' + esc(h.name || h.ticker || "New holding") + '</b><span class="small muted">' + esc(h.ticker || "no ticker") + " · " + fmtUnits(h.shares || 0) + " sh" + (h.cost > 0 ? " · avg " + money(h.cost) : "") + '</span></div><div class="hbuy"><b style="font-size:16px">' + money(v) + '</b><span class="small muted">' + (h.price > 0 ? money(h.price) : "no price") + '</span></div><span class="chev">›</span></div>';
         }).join("") + (hs.length ? "" : '<div class="li muted small">Nothing here yet. Tap Add holding to start.</div>') +
         '<button class="li add" data-add="' + L.id + '">+ Add holding</button></div></section>';
+    }).join("") + "</div>";
+  }
+
+
+  function holdingsTable() {
+    return '<div class="stack">' + LAYERS.map(function (L) {
+      var hs = S.holdings.filter(function (h) { return h.layer === L.id; });
+      return '<section class="panel"><div class="layerhead"><div><h3>' + dot(L.color) + L.name + '</h3><span class="muted small">' + L.sub + '</span></div><button class="btn" data-add="' + L.id + '">Add holding</button></div>' +
+        (hs.length ? '<div class="tablewrap"><table class="holdtbl"><thead><tr><th>Name</th><th>Ticker</th><th title="Splits the sleeve\'s monthly money between holdings">Weight</th><th>Shares</th><th>Avg cost</th><th>Price</th><th>52-wk high</th><th>Price 30d ago</th><th title="Highest +50% step already trimmed">Last trim rung</th><th title="Choose Pence for funds quoted in pence">Quoted in</th><th></th></tr></thead><tbody>' +
+          hs.map(function (h) {
+            function inp(f, w) { return '<td><input style="min-width:' + w + 'px" type="number" inputmode="decimal" step="any" min="0" data-id="' + h.id + '" data-f="' + f + '" value="' + (h[f] == null ? "" : h[f]) + '"></td>'; }
+            return '<tr><td><input style="min-width:110px" data-id="' + h.id + '" data-f="name" value="' + esc(h.name) + '"></td><td><input style="min-width:64px" data-id="' + h.id + '" data-f="ticker" value="' + esc(h.ticker) + '"></td>' +
+              inp("w", 48) + inp("shares", 64) + inp("cost", 72) + inp("price", 72) + inp("high", 72) + inp("p30", 72) + inp("rung", 48) +
+              '<td><select data-id="' + h.id + '" data-f="pence" style="background:var(--fill);border-radius:8px;padding:6px 8px;font-size:14px;min-width:104px"><option value="main"' + (h.pence ? "" : " selected") + '>Main currency</option><option value="pence"' + (h.pence ? " selected" : "") + '>Pence</option></select></td>' +
+              '<td><button class="btn danger" data-del="' + h.id + '" aria-label="Remove ' + esc(h.name) + '">Remove</button></td></tr>';
+          }).join("") + "</tbody></table></div>" : '<p class="muted">Nothing here yet. Click Add holding to start.</p>') + "</section>";
     }).join("") + "</div>";
   }
 
@@ -782,7 +820,7 @@ input.priceinp { width: 104px; text-align: right; padding: 6px 8px; font-size: 1
       '</div><div class="foot">The video uses 20% for individual stocks and 10% for the S&amp;P 500, because an index does not fall like a single stock. Trim rungs are fixed at +50%, +100% and +150% (10%, 20%, 30%), repeating.</div></section>' +
       '<section><div class="grouphead">Live prices (Finnhub)</div><div class="list">' + li("API key", '<input type="password" id="finnhubKey" autocomplete="off" placeholder="Paste key" value="' + esc(getKey()) + '" style="width:180px">') +
       '</div><div class="foot" id="keyMsg">Stored only in this browser, separately from your portfolio, and not included in the backup. Each holding needs a ticker.</div></section>' +
-      '<section><div class="grouphead">Help</div><div class="list"><button class="li add" data-act="howto" style="border-top:0">How iPlouton works</button></div></section>' +
+      '<section><div class="grouphead">Help</div><div class="list"><button class="li add" data-act="howto" style="border-top:0">How iPlouton works</button><button class="li add" data-act="layout">' + (layoutMode() === "desktop" ? "Switch to mobile layout" : "Switch to desktop layout") + '</button></div><div class="foot">Layout normally follows your screen size automatically. Desktop layout makes a phone show the full laptop view, like the "desktop site" option in your browser menu.</div></section>' +
       '<section><div class="grouphead">Backup</div><div class="panel"><p class="muted small" style="margin-bottom:10px">Your data lives only in this browser. Copy the text below somewhere safe, and paste it back here to restore it on another device.</p>' +
       '<textarea id="backup" spellcheck="false">' + esc(JSON.stringify(S)) + '</textarea><div class="row" style="margin-top:10px"><button class="btn" data-act="copy">Copy</button><button class="btn" data-act="import">Restore from text</button><span class="small muted" id="backupMsg"></span></div></div></section>' +
       '<section><div class="grouphead">Reset</div><div class="row"><button class="btn" data-act="loadex">Load the video examples</button><button class="btn danger" data-act="startfresh">Empty everything</button></div></section></div>';
@@ -793,7 +831,7 @@ input.priceinp { width: 104px; text-align: right; padding: 6px 8px; font-size: 1
     var b = e.target.closest("button");
     if (!b) return;
     if (b.dataset.tab) { tab = b.dataset.tab; render(); return; }
-    if (b.dataset.add) { var nh = { id: uid(), layer: b.dataset.add, name: "", ticker: "", w: 1, shares: 0, cost: null, price: null, high: null, p30: null, rung: 0 }; S.holdings.push(nh); S.example = false; save(); openSheet(nh.id); return; }
+    if (b.dataset.add) { var nh = { id: uid(), layer: b.dataset.add, name: "", ticker: "", w: 1, shares: 0, cost: null, price: null, high: null, p30: null, rung: 0 }; S.holdings.push(nh); S.example = false; save(); if (window.matchMedia("(min-width: 900px)").matches) { render(true); } else { openSheet(nh.id); } return; }
     if (b.dataset.del) { S.holdings = S.holdings.filter(function (h) { return h.id !== b.dataset.del; }); save(); closeSheet(); return; }
     if (b.dataset.trim) { recordTrim(b.dataset.trim); renderPlanOut(); return; }
     var a = b.dataset.act;
@@ -801,6 +839,7 @@ input.priceinp { width: 104px; text-align: right; padding: 6px 8px; font-size: 1
       if (!confirmRecord) { confirmRecord = true; renderPlanOut(); return; }
       recordMonth(); S.example = false; confirmRecord = false; render(); return;
     }
+    if (a === "layout") { try { if (layoutMode() === "desktop") localStorage.removeItem(LAYK); else localStorage.setItem(LAYK, "desktop"); } catch (err) {} applyLayout(); render(true); return; }
     if (a === "closesheet") { closeSheet(); return; }
     if (a === "howto") { showSheet(howtoHtml()); return; }
     if (a === "snap") { snap(); save(); render(); return; }
@@ -900,6 +939,7 @@ input.priceinp { width: 104px; text-align: right; padding: 6px 8px; font-size: 1
     if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[data-open]")) { e.preventDefault(); openSheet(e.target.dataset.open); }
   });
 
+  applyLayout();
   render();
   if (storageOK) document.getElementById("saveState").textContent = S.example ? "Example data" : "Saved on this device";
   else document.getElementById("saveState").textContent = "Browser storage unavailable. Use Settings > Backup.";
