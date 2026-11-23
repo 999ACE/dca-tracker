@@ -119,6 +119,10 @@ table.slidetbl tbody tr:nth-child(even) td { background: var(--bg); }
 .halfbox { border: 2px solid var(--slow); color: var(--ink); border-radius: 8px; padding: 9px 14px; }
 .halfbox b { color: var(--slow); }
 input.priceinp { width: 100px; text-align: right; padding: 5px 7px; font-size: 14px; }
+svg .gl { stroke: var(--line); stroke-width: 1; }
+svg .ax { fill: var(--muted); font-size: 11px; font-family: var(--font-body); }
+svg .lb { fill: var(--ink); font-size: 12px; font-family: var(--font-body); }
+.tip { position: absolute; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; font-size: 12px; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
 code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
 @media (max-width: 560px) { h1 { font-size: 22px; } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -134,6 +138,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     </div>
     <p class="small muted" id="saveState"></p>
   </header>
+  <div id="banner"></div>
   <nav class="tabs" role="tablist" id="tabs"></nav>
   <main id="view"></main>
 </div>
@@ -173,11 +178,17 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
         H("spec", "SpaceX", "SPCX", 10, 150, 143.09, 225.64),
         H("spec", "Bloom Energy", "BE", 15, 200, 185.42, 351.28)
       ],
-      history: []
+      history: [],
+      snaps: [
+        { date: "2026-08-14", value: 30100, cost: 28000, dry: 1500 },
+        { date: "2026-09-14", value: 33800, cost: 29600, dry: 1750 },
+        { date: "2026-10-14", value: 37900, cost: 31000, dry: 1900 },
+        { date: "2026-11-13", value: 40678.24, cost: 32400, dry: 2000 }
+      ]
     };
   }
   function blank() {
-    return { example: false, cur: "£", monthly: 500, dry: 0, investDay: 1, pricesAsOf: null, alloc: { core: 50, quality: 45, spec: 5 }, specCap: 5, halfPct: 20, trig: { core: 10, quality: 20, spec: 20 }, holdings: [], history: [] };
+    return { example: false, cur: "£", monthly: 500, dry: 0, investDay: 1, pricesAsOf: null, alloc: { core: 50, quality: 45, spec: 5 }, specCap: 5, halfPct: 20, trig: { core: 10, quality: 20, spec: 20 }, holdings: [], history: [], snaps: [] };
   }
 
   var S, storageOK = true;
@@ -190,6 +201,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     catch (e) { storageOK = false; document.getElementById("saveState").textContent = "Not saved: browser storage unavailable. Use Settings > Backup."; }
   }
   S = load() || example();
+  if (!Array.isArray(S.snaps)) S.snaps = [];
   S.investDay = Math.min(31, Math.max(1, parseInt(S.investDay, 10) || 1));
 
   function money(n) {
@@ -280,6 +292,13 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
   }
 
   /* ---------- Actions ---------- */
+  function snap() {
+    var T = totals(), cost = 0, d = ymd(new Date());
+    S.holdings.forEach(function (h) { if (h.shares > 0 && h.cost > 0) cost += h.shares * h.cost; });
+    S.snaps = (S.snaps || []).filter(function (x) { return x.date !== d; });
+    S.snaps.push({ date: d, value: T.all, cost: cost, dry: S.dry || 0 });
+    S.snaps.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+  }
   function recordMonth() {
     var P = computePlan(), lines = [];
     P.rows.forEach(function (r) {
@@ -290,6 +309,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       lines.push({ t: h.ticker || h.name, amt: r.amt, speed: r.speed, price: h.price, units: u });
     });
     S.dry = Math.max(0, (S.dry || 0) + P.dryChange);
+    snap();
     S.history.unshift({ id: uid(), date: today(), kind: "buy", monthly: S.monthly, invested: P.total, dryChange: P.dryChange, dryAfter: S.dry, lines: lines });
     save();
   }
@@ -299,6 +319,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     t.h.shares -= t.shares;
     t.h.rung = t.rung;
     S.dry = (S.dry || 0) + t.proceeds;
+    snap();
     S.history.unshift({ id: uid(), date: today(), kind: "trim", monthly: 0, invested: 0, dryChange: t.proceeds, dryAfter: S.dry, lines: [{ t: t.h.ticker || t.h.name, amt: -t.proceeds, speed: "trim " + t.pct + "% at +" + (50 * t.rung) + "%", price: t.h.price, units: -t.shares }] });
     save();
   }
@@ -323,16 +344,26 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     if (!list.length) { refreshedAt = new Date(); refreshMsg = "Add a ticker to each holding in the Holdings tab first."; renderPlanOut(); return; }
     refreshing = true; refreshMsg = "Fetching prices..."; renderPlanOut();
     var ok = 0, problems = [], i = 0;
+    var candleBlocked = false;
     function one(h) {
-      var sym = encodeURIComponent(h.ticker.trim().toUpperCase()), base = "https://finnhub.io/api/v1/";
-      return fetchJson(base + "quote?symbol=" + sym + "&token=" + encodeURIComponent(key)).then(function (q) {
+      var sym = encodeURIComponent(h.ticker.trim().toUpperCase()), base = "https://finnhub.io/api/v1/", k = h.pence ? 0.01 : 1, tk = "&token=" + encodeURIComponent(key);
+      return fetchJson(base + "quote?symbol=" + sym + tk).then(function (q) {
         if (!q || !(q.c > 0)) throw new Error("no price returned for this ticker");
-        if (!h.priceManual) h.price = q.c;
-        return fetchJson(base + "stock/metric?symbol=" + sym + "&metric=all&token=" + encodeURIComponent(key)).then(function (m) {
+        if (!h.priceManual) h.price = q.c * k;
+        return fetchJson(base + "stock/metric?symbol=" + sym + "&metric=all" + tk).then(function (m) {
           var hi = m && m.metric ? m.metric["52WeekHigh"] : null;
-          if (hi > 0 && !h.highManual) h.high = hi;
+          if (hi > 0 && !h.highManual) h.high = hi * k;
           else if (!(hi > 0) && !h.highManual) problems.push(h.ticker + ": no 52-week high returned");
           ok++;
+          if (h.p30Manual || candleBlocked) return;
+          var now = Math.floor(Date.now() / 1000);
+          return fetchJson(base + "stock/candle?symbol=" + sym + "&resolution=D&from=" + (now - 40 * 86400) + "&to=" + (now - 30 * 86400) + tk).then(function (c) {
+            if (c && c.s === "ok" && c.c && c.c.length) h.p30 = c.c[c.c.length - 1] * k;
+            else problems.push(h.ticker + ": no 30-day price returned");
+          }, function (e) {
+            if (/free plan|rejected/.test(e.message)) { candleBlocked = true; problems.push("30-day prices are not available on your Finnhub plan, so enter them in Holdings"); }
+            else problems.push(h.ticker + " 30-day price: " + e.message);
+          });
         });
       }).catch(function (e) { problems.push(h.ticker + ": " + e.message); });
     }
@@ -343,7 +374,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
     }
     next().then(function () {
       refreshing = false; refreshedAt = new Date();
-      if (ok) S.pricesAsOf = new Date().toISOString();
+      if (ok) { S.pricesAsOf = new Date().toISOString(); snap(); }
       S.example = false; save();
       refreshMsg = "Updated " + ok + " of " + list.length + (problems.length ? ". Problems: " + problems.join("; ") : ".");
       renderPlanOut();
@@ -370,13 +401,29 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       return '<button role="tab" data-tab="' + t[0] + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + "</button>";
     }).join("");
   }
+  function ymd(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function bannerHtml() {
+    var now = new Date(), td = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var due = new Date(td.getFullYear(), td.getMonth(), Math.min(S.investDay, new Date(td.getFullYear(), td.getMonth() + 1, 0).getDate()));
+    var bought = S.history.some(function (e) { return e.kind === "buy" && e.date >= ymd(due); });
+    var go = tab !== "plan" ? ' <button class="btn" data-tab="plan">Open monthly plan</button>' : "";
+    if (td >= due && !bought) {
+      var late = Math.round((td - due) / 864e5);
+      var wk = (td.getDay() === 0 || td.getDay() === 6) ? " It is a weekend, so buy on the next trading day." : "";
+      return '<div class="note" style="background:var(--go-bg);color:var(--go);margin-bottom:16px"><b>' + (late === 0 ? "Today is your investing day." : "Your investing day was " + late + (late === 1 ? " day" : " days") + " ago and no purchase is recorded for this month.") + "</b> Refresh prices, then make your purchases and record them." + wk + go + "</div>";
+    }
+    var until = Math.round((due - td) / 864e5);
+    if (until > 0 && until <= 3) return '<div class="note info" style="margin-bottom:16px">Your investing day is in ' + until + (until === 1 ? " day" : " days") + ".</div>";
+    return "";
+  }
   function render() {
+    document.getElementById("banner").innerHTML = bannerHtml();
     renderTabs();
     confirmRecord = false;
     var v = document.getElementById("view");
     if (tab === "plan") { v.innerHTML = planShell(); renderPlanOut(); }
     else if (tab === "holdings") v.innerHTML = holdingsView();
-    else if (tab === "portfolio") v.innerHTML = portfolioView();
+    else if (tab === "portfolio") { v.innerHTML = portfolioView(); wireChart(); }
     else if (tab === "history") v.innerHTML = historyView();
     else v.innerHTML = settingsView();
   }
@@ -466,7 +513,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       if (r.both) flags.push("also up " + pct(r.up, 0) + " in 30 days");
       if (r.capped) flags.push("buy limited by sleeve cap");
       if (!(r.h.price > 0)) flags.push("enter a price");
-      return "<tr><td><b>" + esc(r.h.name || r.h.ticker) + '</b></td><td class="r"><input class="priceinp" type="number" min="0" step="any" aria-label="Price for ' + esc(r.h.name || r.h.ticker) + '" data-id="' + r.h.id + '" data-f="price" value="' + (r.h.price == null ? "" : r.h.price) + '">' + (r.h.priceManual ? '<div class="small muted">manual · <a href="#" data-unmanual="' + r.h.id + '">use fetched</a></div>' : "") + '</td><td class="r">' + (r.h.high > 0 ? money(r.h.high) : "–") + '</td><td class="r"><b>' + (r.off == null ? "–" : pct(Math.max(0, r.off), 0)) + '</b></td><td class="muted">' + (r.layer === "spec" ? "Sleeve" : r.trig + "%") + '</td><td><span class="verdict ' + r.speed + '">' + label + "&nbsp; " + money0(S.monthly * r.mult) + "</span>" + (flags.length ? '<div class="small muted">' + esc(flags.join(" · ")) + "</div>" : "") + '</td><td class="r"><b>' + money(r.amt) + "</b></td></tr>";
+      return "<tr><td><b>" + esc(r.h.name || r.h.ticker) + '</b></td><td class="r"><input class="priceinp" type="number" min="0" step="any" aria-label="Price for ' + esc(r.h.name || r.h.ticker) + '" data-id="' + r.h.id + '" data-f="price" value="' + (r.h.price == null ? "" : r.h.price) + '">' + (r.h.priceManual ? '<div class="small muted">manual · <a href="#" data-unmanual="' + r.h.id + '">use fetched</a></div>' : "") + '</td><td class="r">' + (r.h.high > 0 ? money(r.h.high) : "–") + '</td><td class="r"><b>' + (r.off == null ? "–" : pct(Math.max(0, r.off), 0)) + '</b></td><td class="r num" style="' + (r.up != null && r.up >= S.halfPct ? "color:var(--slow);font-weight:700" : "") + '">' + (r.up == null ? "–" : (r.up >= 0 ? "+" : "") + pct(r.up, 1)) + '</td><td class="muted">' + (r.layer === "spec" ? "Sleeve" : r.trig + "%") + '</td><td><span class="verdict ' + r.speed + '">' + label + "&nbsp; " + money0(S.monthly * r.mult) + "</span>" + (flags.length ? '<div class="small muted">' + esc(flags.join(" · ")) + "</div>" : "") + '</td><td class="r"><b>' + money(r.amt) + "</b></td></tr>";
     }).join("");
     var halfNames = P.rows.filter(function (r) { return r.up != null && r.up >= S.halfPct; }).map(nm);
     var noP30 = P.rows.filter(function (r) { return r.up == null; }).length;
@@ -488,10 +535,10 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
 
     out.innerHTML =
       '<section class="panel"><div class="step"><div class="n">2</div><div class="stack" style="gap:12px;min-width:0">' +
-      '<div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2>Price vs. the 52-week high</h2><p class="muted small">Each holding is checked against its 52-week high. Verdict amounts are for your ' + money0(S.monthly) + ' month: normal 50%, double down 150%, half speed 25%.</p></div>' +
-      '<div style="text-align:right;max-width:340px"><button class="btn primary" data-act="refresh"' + (refreshing ? " disabled" : "") + '>' + (refreshing ? "Refreshing..." : "Refresh") + '</button><div class="small muted" style="margin-top:4px">' + (refreshed ? "Refreshed " + refreshed : "Not refreshed yet") + (refreshMsg ? "<br>" + esc(refreshMsg) : "") + "</div></div></div>" +
+      '<div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div style="flex:1 1 auto;min-width:0"><h2>Price vs. the 52-week high</h2><p class="muted small">Each holding is checked against its 52-week high. Change (%) is the move since the price 30 days ago. Verdict amounts are for your ' + money0(S.monthly) + ' month: normal 50%, double down 150%, half speed 25%.</p></div>' +
+      '<div style="text-align:right;flex:0 0 auto;max-width:220px"><button class="btn primary" data-act="refresh"' + (refreshing ? " disabled" : "") + '>' + (refreshing ? "Refreshing..." : "Refresh") + '</button><div class="small muted" style="margin-top:4px">' + (refreshed ? "Refreshed " + refreshed : "Not refreshed yet") + (refreshMsg ? "<br>" + esc(refreshMsg) : "") + "</div></div></div>" +
       (isToday ? '<div class="note" style="background:var(--go-bg);color:var(--go)"><b>Today is your investing day.</b> Refresh, then act on the verdicts below.</div>' : "") +
-      '<div class="tablewrap slide"><table class="slidetbl"><thead><tr><th>Holding</th><th class="r">Price</th><th class="r">52-wk high</th><th class="r">Off high</th><th>Rule</th><th>Verdict</th><th class="r">Your buy</th></tr></thead><tbody>' + (slideRows || '<tr><td colspan="7" class="muted">Add holdings in the Holdings tab.</td></tr>') + "</tbody></table></div>" +
+      '<div class="tablewrap slide"><table class="slidetbl"><thead><tr><th>Holding</th><th class="r">Price</th><th class="r">52-wk high</th><th class="r">Off high</th><th class="r" title="Price now against the price 30 days ago">Change (%)</th><th>Rule</th><th>Verdict</th><th class="r">Your buy</th></tr></thead><tbody>' + (slideRows || '<tr><td colspan="8" class="muted">Add holdings in the Holdings tab.</td></tr>') + "</tbody></table></div>" +
       '<div class="row" style="justify-content:space-between;align-items:flex-start;gap:12px"><div class="halfbox">' + halfText + "</div>" + (nearText ? '<p class="small muted" style="font-style:italic;max-width:320px">' + esc(nearText) + "</p>" : "") + "</div>" +
       '<p class="small muted">Prices last updated: ' + esc(fmtStamp(S.pricesAsOf)) + ". Refresh pulls the price and 52-week high from Finnhub for each ticker. Type over any price to override it (it is kept when you Refresh). The 30-day price is not fetched, so enter it in Holdings. Double-down rule: " + S.trig.quality + "% below the 52-week high for stocks, " + S.trig.core + "% for the index core.</p>" +
       '<details ' + (pasteMsgText ? "open" : "") + '><summary class="small" style="cursor:pointer">Update prices by pasting</summary><div class="stack" style="gap:8px;margin-top:8px"><p class="small muted">One holding per line: ticker, price, 52-week high, price 30 days ago. The last two are optional. Example: <code>NVDA 162.85 239.24 150</code></p><textarea id="paste" spellcheck="false" placeholder="NVDA 162.85 239.24 150"></textarea><div class="row"><button class="btn" data-act="applypaste">Apply prices</button><span class="small muted" id="pasteMsg">' + esc(pasteMsgText) + '</span></div></div></details>' +
@@ -521,14 +568,59 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       LAYERS.map(function (L) {
         var hs = S.holdings.filter(function (h) { return h.layer === L.id; });
         return '<section class="panel"><div class="layerhead"><div><h3><span class="sw" style="background:' + L.color + '"></span>' + L.name + '</h3><span class="muted small">' + L.sub + '</span></div><button class="btn" data-add="' + L.id + '">Add holding</button></div>' +
-          (hs.length ? '<div class="tablewrap"><table class="holdtbl"><thead><tr><th>Name</th><th>Ticker</th><th>Weight</th><th>Shares</th><th>Avg cost</th><th>Price</th><th>52-wk high</th><th>Price 30d ago</th><th>Last trim rung</th><th></th></tr></thead><tbody>' +
+          (hs.length ? '<div class="tablewrap"><table class="holdtbl"><thead><tr><th>Name</th><th>Ticker</th><th>Weight</th><th>Shares</th><th>Avg cost</th><th>Price</th><th>52-wk high</th><th>Price 30d ago</th><th>Last trim rung</th><th title="Some London-listed funds are quoted in pence. Choose Pence to divide fetched prices by 100.">Quoted in</th><th></th></tr></thead><tbody>' +
             hs.map(function (h) {
               function inp(f, w, step) { return '<td><input style="min-width:' + w + 'px" type="number" step="any" min="0" data-id="' + h.id + '" data-f="' + f + '" value="' + (h[f] == null ? "" : h[f]) + '"></td>'; }
               return '<tr><td><input style="min-width:130px" data-id="' + h.id + '" data-f="name" value="' + esc(h.name) + '"></td><td><input style="min-width:70px" data-id="' + h.id + '" data-f="ticker" value="' + esc(h.ticker) + '"></td>' +
-                inp("w", 60) + inp("shares", 80) + inp("cost", 80) + inp("price", 80) + inp("high", 80) + inp("p30", 80) + inp("rung", 60) +
+                inp("w", 60) + inp("shares", 80) + inp("cost", 80) + inp("price", 80) + inp("high", 80) + inp("p30", 80) + inp("rung", 60) + '<td><select data-id="' + h.id + '" data-f="pence"><option value="main"' + (h.pence ? "" : " selected") + '>Main currency</option><option value="pence"' + (h.pence ? " selected" : "") + '>Pence</option></select></td>' +
                 '<td><button class="btn danger" data-del="' + h.id + '" aria-label="Remove ' + esc(h.name) + '">Remove</button></td></tr>';
             }).join("") + "</tbody></table></div>" : '<p class="muted">Nothing here yet.</p>') + "</section>";
       }).join("") + "</div>";
+  }
+
+  function chartHtml() {
+    var pts = (S.snaps || []).slice();
+    var head = '<section class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h2>Value over time</h2><button class="btn" data-act="snap">Save snapshot now</button></div>';
+    if (pts.length < 2) return head + '<p class="muted" style="margin-top:8px">A snapshot is saved each time you Refresh prices or record a purchase or trim. The chart appears once there are two or more.</p></section>';
+    var W = 640, H = 250, ml = 56, mr = 70, mt = 14, mb = 28;
+    var t0 = new Date(pts[0].date).getTime(), t1 = new Date(pts[pts.length - 1].date).getTime();
+    var vals = []; pts.forEach(function (p) { vals.push(p.value, p.cost); });
+    var lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    var step = Math.pow(10, Math.floor(Math.log(Math.max(hi - lo, 1)) / Math.LN10)) / 2;
+    lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step; if (hi === lo) hi = lo + step;
+    function X(d) { return ml + (t1 === t0 ? 0 : (new Date(d).getTime() - t0) / (t1 - t0)) * (W - ml - mr); }
+    function Y(v) { return mt + (1 - (v - lo) / (hi - lo)) * (H - mt - mb); }
+    function short(v) { return S.cur + (Math.abs(v) >= 1000 ? (v / 1000).toLocaleString("en-GB", { maximumFractionDigits: 1 }) + "k" : Math.round(v)); }
+    var grid = "";
+    for (var i = 0; i <= 4; i++) { var v = lo + (hi - lo) * i / 4, y = Y(v); grid += '<line x1="' + ml + '" x2="' + (W - mr) + '" y1="' + y + '" y2="' + y + '" class="gl"/><text x="' + (ml - 8) + '" y="' + (y + 4) + '" text-anchor="end" class="ax">' + short(v) + "</text>"; }
+    function path(key) { return pts.map(function (p, i) { return (i ? "L" : "M") + X(p.date).toFixed(1) + " " + Y(p[key]).toFixed(1); }).join(" "); }
+    function fd(d) { return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" }); }
+    var last = pts[pts.length - 1];
+    var svg = '<svg id="pfchart" viewBox="0 0 ' + W + " " + H + '" width="100%" role="img" aria-label="Holdings value and amount paid in over time" style="display:block;max-width:100%">' + grid +
+      '<text x="' + ml + '" y="' + (H - 8) + '" class="ax">' + fd(pts[0].date) + '</text><text x="' + (W - mr) + '" y="' + (H - 8) + '" text-anchor="end" class="ax">' + fd(last.date) + "</text>" +
+      '<path d="' + path("cost") + '" fill="none" stroke="var(--quality)" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round"/>' +
+      '<path d="' + path("value") + '" fill="none" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>' +
+      pts.map(function (p) { return '<circle cx="' + X(p.date).toFixed(1) + '" cy="' + Y(p.value).toFixed(1) + '" r="4" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"/>'; }).join("") +
+      '<text x="' + (W - mr + 8) + '" y="' + (Y(last.value) + 4) + '" class="lb" style="font-weight:700">Value</text><text x="' + (W - mr + 8) + '" y="' + (Y(last.cost) + (Math.abs(Y(last.cost) - Y(last.value)) < 14 ? 16 : 4)) + '" class="lb">Paid in</text>' +
+      '<line id="pfx" x1="0" x2="0" y1="' + mt + '" y2="' + (H - mb) + '" stroke="var(--muted)" stroke-width="1" visibility="hidden"/></svg>';
+    var rowsT = pts.slice().reverse().map(function (p) { return "<tr><td>" + esc(p.date) + '</td><td class="r">' + money(p.value) + '</td><td class="r">' + money(p.cost) + '</td><td class="r">' + signed(p.value - p.cost) + '</td><td class="r">' + money(p.dry) + "</td></tr>"; }).join("");
+    return head + '<div style="position:relative;margin-top:8px">' + svg + '<div id="pftip" class="tip" hidden></div></div>' +
+      '<p class="small muted"><span class="sw" style="background:var(--ink)"></span>Holdings value &nbsp; <span style="display:inline-block;width:18px;border-top:2px dashed var(--quality);vertical-align:middle;margin-right:6px"></span>Amount paid in (cost basis)</p>' +
+      '<details style="margin-top:8px"><summary class="small" style="cursor:pointer">Show as table</summary><div class="tablewrap"><table><thead><tr><th>Date</th><th class="r">Value</th><th class="r">Paid in</th><th class="r">Return</th><th class="r">Dry powder</th></tr></thead><tbody>' + rowsT + "</tbody></table></div></details></section>";
+  }
+  function wireChart() {
+    var svg = document.getElementById("pfchart"); if (!svg) return;
+    var pts = S.snaps, tip = document.getElementById("pftip"), line = document.getElementById("pfx");
+    svg.addEventListener("mousemove", function (e) {
+      var r = svg.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 640;
+      var t0 = new Date(pts[0].date).getTime(), t1 = new Date(pts[pts.length - 1].date).getTime(), best = 0, bd = 1e9;
+      pts.forEach(function (p, i) { var px = 56 + (t1 === t0 ? 0 : (new Date(p.date).getTime() - t0) / (t1 - t0)) * (640 - 56 - 70); if (Math.abs(px - x) < bd) { bd = Math.abs(px - x); best = i; } });
+      var p = pts[best], px = 56 + (t1 === t0 ? 0 : (new Date(p.date).getTime() - t0) / (t1 - t0)) * (640 - 56 - 70);
+      line.setAttribute("x1", px); line.setAttribute("x2", px); line.setAttribute("visibility", "visible");
+      tip.hidden = false; tip.innerHTML = "<b>" + esc(p.date) + "</b><br>Value " + money(p.value) + "<br>Paid in " + money(p.cost) + "<br>Return " + signed(p.value - p.cost);
+      tip.style.left = Math.min(px / 640 * r.width, r.width - 150) + "px"; tip.style.top = "0px";
+    });
+    svg.addEventListener("mouseleave", function () { tip.hidden = true; line.setAttribute("visibility", "hidden"); });
   }
 
   function portfolioView() {
@@ -544,7 +636,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       var layer = LAYERS.filter(function (l) { return l.id === h.layer; })[0];
       return "<tr><td><b>" + esc(h.ticker || h.name) + '</b></td><td><span class="sw" style="background:' + layer.color + '"></span>' + layer.name + '</td><td class="r">' + (h.shares || 0).toLocaleString("en-GB", { maximumFractionDigits: 4 }) + '</td><td class="r">' + money(v) + '</td><td class="r">' + pct(T.all > 0 ? v / T.all * 100 : 0) + '</td><td class="r">' + (gain == null ? "–" : (gain >= 0 ? "+" : "") + pct(gain, 0)) + "</td><td>" + (r ? pill(r.speed) : "") + "</td></tr>";
     }).join("");
-    return '<div class="stack"><section class="panel"><div class="grid"><div class="tile"><div class="k">Invested value</div><div class="v">' + money(T.all) + '</div></div><div class="tile"><div class="k">Dry powder</div><div class="v">' + money(S.dry) + '</div></div><div class="tile"><div class="k">Total incl. dry powder</div><div class="v">' + money(T.all + (S.dry || 0)) + "</div></div></div></section>" +
+    return '<div class="stack">' + chartHtml() + '<section class="panel"><div class="grid"><div class="tile"><div class="k">Invested value</div><div class="v">' + money(T.all) + '</div></div><div class="tile"><div class="k">Dry powder</div><div class="v">' + money(S.dry) + '</div></div><div class="tile"><div class="k">Total incl. dry powder</div><div class="v">' + money(T.all + (S.dry || 0)) + "</div></div></div></section>" +
       '<section class="panel"><h2 style="margin-bottom:12px">Layers against target</h2>' + layerRows + '<p class="muted small">The dark tick marks the target. Weights use invested holdings only, not dry powder.</p>' +
       (T.all > 0 && T.byLayer.spec / T.all * 100 > S.specCap ? '<div class="note warn" style="margin-top:8px">Speculative sleeve is ' + pct(T.byLayer.spec / T.all * 100) + ", above the " + S.specCap + "% cap.</div>" : "") + "</section>" +
       '<section class="panel"><h2 style="margin-bottom:8px">Holdings</h2><div class="tablewrap"><table><thead><tr><th>Holding</th><th>Layer</th><th class="r">Shares</th><th class="r">Value</th><th class="r">Weight</th><th class="r">Gain on cost</th><th>Speed now</th></tr></thead><tbody>' + (hr || '<tr><td colspan="7" class="muted">No holdings yet.</td></tr>') + "</tbody></table></div></section></div>";
@@ -584,6 +676,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       if (!confirmRecord) { confirmRecord = true; renderPlanOut(); return; }
       recordMonth(); S.example = false; confirmRecord = false; render(); return;
     }
+    if (a === "snap") { snap(); save(); render(); return; }
     if (a === "refresh") { doRefresh(); return; }
     if (a === "applypaste") {
       var box = document.getElementById("paste"), pm = document.getElementById("pasteMsg"), upd = 0, unknown = [];
@@ -638,11 +731,13 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
       var h = S.holdings.filter(function (x) { return x.id === t.dataset.id; })[0];
       if (!h) return;
       var f = t.dataset.f;
+      if (f === "pence") { h.pence = t.value === "pence"; save(); return; }
       h[f] = (f === "name" || f === "ticker") ? t.value : (f === "w" ? (num(t.value) || 1) : f === "rung" ? Math.max(0, Math.floor(num(t.value) || 0)) : num(t.value));
       if (f === "shares" && h.shares == null) h.shares = 0;
       if (f === "price" || f === "high" || f === "p30") S.pricesAsOf = new Date().toISOString();
       if (f === "price") h.priceManual = true;
       if (f === "high") h.highManual = true;
+      if (f === "p30") h.p30Manual = true;
       S.example = false; save();
       if (tab === "plan") renderPlanOut();
       return;
